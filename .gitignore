@@ -1,2 +1,4 @@
 # HyperFrames local working state (machine-specific)
 .hyperframes/
+.media/
+renders/

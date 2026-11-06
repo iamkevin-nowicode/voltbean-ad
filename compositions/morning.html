@@ -1,0 +1,259 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #c79aa2;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    /* BEFORE palette: dusty, half-asleep inks */
+    #m-set {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 3840px;
+      height: 1080px;
+    }
+    #m-set svg { position: absolute; overflow: visible; }
+    .m-ink { fill: none; stroke: #2b2724; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .m-title {
+      position: absolute;
+      color: #2b2724;
+      text-transform: uppercase;
+      line-height: 0.88;
+      letter-spacing: 0.01em;
+    }
+    #m-title { left: 700px; top: 150px; font-size: 190px; }
+    #m-title span { display: block; }
+    #m-script {
+      position: absolute;
+      left: 960px;
+      top: 26px;
+      font-family: "Yellowtail", cursive;
+      font-size: 130px;
+      color: #2b2724;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+    #m-pillar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2200px;
+      height: 1080px;
+      background: #6e5f5a;
+      z-index: 20;
+    }
+    #m-pillar i {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 90px;
+      background: #8a7a72;
+    }
+  </style>
+
+  <div id="root" data-composition-id="morning" data-width="1920" data-height="1080">
+    <!-- ======== THE SET: bedroom wall → hallway, one long strip the camera trucks across ======== -->
+    <div id="m-set" data-layout-allow-overflow>
+      <!-- wall, dado band, floor -->
+      <svg width="3840" height="1080" style="left:0;top:0">
+        <defs>
+          <pattern id="m-paper" width="180" height="180" patternUnits="userSpaceOnUse">
+            <rect width="180" height="180" fill="#c79aa2" />
+            <polygon points="45,25 51,39 65,45 51,51 45,65 39,51 25,45 39,39" fill="#d3aab1" />
+            <polygon points="135,115 139,125 149,129 139,133 135,143 131,133 121,129 131,125" fill="#d3aab1" />
+          </pattern>
+          <pattern id="m-dado" width="60" height="220" patternUnits="userSpaceOnUse">
+            <rect width="60" height="220" fill="#b98c95" />
+            <rect width="22" height="220" fill="#ae8089" />
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="3840" height="1080" fill="url(#m-paper)" />
+        <rect x="0" y="640" width="3840" height="220" fill="url(#m-dado)" />
+        <rect x="0" y="860" width="3840" height="220" fill="#a89a86" />
+        <line x1="0" y1="862" x2="3840" y2="862" class="m-ink" />
+        <line x1="0" y1="640" x2="3840" y2="640" class="m-ink" style="stroke-width:3" />
+      </svg>
+
+      <!-- nightstand under the clock -->
+      <svg width="420" height="300" style="left:160px;top:600px">
+        <rect x="20" y="20" width="360" height="200" fill="#8fa9a3" />
+        <rect x="50" y="60" width="300" height="60" fill="#7d9792" />
+        <circle cx="200" cy="90" r="10" fill="#2b2724" />
+        <rect x="20" y="20" width="360" height="200" class="m-ink" transform="translate(-10,-7)" />
+        <g class="m-ink" style="stroke-width:7"><line x1="50" y1="220" x2="40" y2="262" /><line x1="350" y1="220" x2="360" y2="262" /></g>
+      </svg>
+
+      <!-- starburst alarm clock -->
+      <svg id="m-clock" width="500" height="560" viewBox="0 -60 500 560" style="left:120px;top:60px">
+        <g id="m-bells">
+          <circle cx="160" cy="-10" r="48" fill="#9c8c9a" />
+          <circle cx="340" cy="-10" r="48" fill="#9c8c9a" />
+          <g transform="translate(-10,-7)">
+            <circle cx="160" cy="-10" r="48" class="m-ink" />
+            <circle cx="340" cy="-10" r="48" class="m-ink" />
+            <line x1="250" y1="-40" x2="250" y2="10" class="m-ink" />
+          </g>
+        </g>
+        <polygon points="250,5 317,88 423,77 412,183 495,250 412,317 423,423 317,412 250,495 183,412 77,423 88,317 5,250 88,183 77,77 183,88" fill="#c9b84a" />
+        <circle cx="250" cy="250" r="150" fill="#e9e1d3" />
+        <g transform="translate(-10,-7)">
+          <polygon points="250,5 317,88 423,77 412,183 495,250 412,317 423,423 317,412 250,495 183,412 77,423 88,317 5,250 88,183 77,77 183,88" class="m-ink" />
+          <circle cx="250" cy="250" r="150" class="m-ink" />
+        </g>
+        <!-- 12 tick marks -->
+        <g fill="#2b2724">
+          <rect x="245" y="112" width="10" height="26" />
+          <rect x="245" y="362" width="10" height="26" />
+          <rect x="112" y="245" width="26" height="10" />
+          <rect x="362" y="245" width="26" height="10" />
+        </g>
+        <!-- hands at 7:04 -->
+        <line x1="250" y1="250" x2="250" y2="140" class="m-ink" style="stroke-width:10" transform="rotate(24 250 250)" />
+        <line x1="250" y1="250" x2="250" y2="175" class="m-ink" style="stroke-width:14" transform="rotate(212 250 250)" />
+        <circle cx="250" cy="250" r="14" fill="#2b2724" />
+      </svg>
+
+      <!-- Dad, frozen mid-yawn, toothbrush upside down -->
+      <svg id="m-dad" width="320" height="720" viewBox="0 0 320 720" style="left:1900px;top:200px">
+        <defs>
+          <pattern id="m-stripes" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="#9c8c9a" />
+            <rect width="12" height="30" fill="#b3a5ae" />
+          </pattern>
+        </defs>
+        <!-- ankles + slippers -->
+        <g class="m-ink" style="stroke-width:7">
+          <line x1="118" y1="650" x2="116" y2="694" />
+          <line x1="204" y1="650" x2="206" y2="694" />
+        </g>
+        <ellipse cx="104" cy="700" rx="38" ry="13" fill="#c9b84a" />
+        <ellipse cx="216" cy="700" rx="38" ry="13" fill="#c9b84a" />
+        <!-- pajama pants -->
+        <polygon points="96,470 226,470 236,660 178,660 161,540 144,660 86,660" fill="url(#m-stripes)" />
+        <polygon points="96,470 226,470 236,660 178,660 161,540 144,660 86,660" class="m-ink" transform="translate(-10,-7)" />
+        <!-- pajama top: broad shoulders, narrow waist -->
+        <polygon points="62,286 258,286 228,486 94,486" fill="url(#m-stripes)" />
+        <polygon points="128,286 160,330 192,286" fill="#e9e1d3" />
+        <polygon points="62,286 258,286 228,486 94,486" class="m-ink" transform="translate(-10,-7)" />
+        <!-- hanging arm -->
+        <polyline points="70,300 46,420 58,520" class="m-ink" style="stroke-width:9" />
+        <circle cx="58" cy="530" r="17" fill="#d6b49b" />
+        <!-- raised arm with upside-down toothbrush at his ear -->
+        <g id="m-arm">
+          <polyline points="250,300 290,230 262,160" class="m-ink" style="stroke-width:9" />
+          <circle cx="260" cy="152" r="17" fill="#d6b49b" />
+          <rect x="252" y="56" width="13" height="100" fill="#8fa9a3" />
+          <rect x="246" y="150" width="26" height="24" fill="#e9e1d3" />
+        </g>
+        <!-- head: square UPA jaw, big wedge nose -->
+        <g id="m-head">
+          <rect x="146" y="250" width="34" height="40" fill="#d6b49b" />
+          <path d="M100,96 Q100,40 162,40 Q224,40 224,96 L228,212 Q228,262 168,262 Q104,262 100,212 Z" fill="#d6b49b" />
+          <path d="M104,196 Q164,246 226,196 L228,214 Q226,262 168,262 Q106,262 102,214 Z" fill="#c2a594" />
+          <ellipse cx="98" cy="160" rx="14" ry="24" fill="#d6b49b" />
+          <path d="M96,110 Q90,26 164,26 Q234,26 228,110 Q210,66 164,68 Q116,68 96,110 Z" fill="#4a423d" />
+          <path d="M150,30 C164,-6 200,0 190,26" class="m-ink" />
+          <path d="M100,96 Q100,40 162,40 Q224,40 224,96 L228,212 Q228,262 168,262 Q104,262 100,212 Z" class="m-ink" transform="translate(-10,-7)" />
+          <path d="M118,134 Q132,146 146,134" class="m-ink" />
+          <path d="M184,134 Q198,146 212,134" class="m-ink" />
+          <path d="M126,116 L148,120 M182,120 L206,114" class="m-ink" style="stroke-width:6" />
+          <!-- the yawn (drawn under the nose) -->
+          <ellipse id="m-mouth" cx="170" cy="218" rx="26" ry="5" fill="#6b2e35" />
+          <polygon points="164,132 222,192 162,198" fill="#c79f86" />
+          <polygon points="164,132 222,192 162,198" class="m-ink" style="stroke-width:4" transform="translate(-6,-4)" />
+        </g>
+      </svg>
+
+      <!-- wall picture: three circles -->
+      <svg width="320" height="260" style="left:2400px;top:290px">
+        <rect x="0" y="0" width="320" height="260" fill="#e9e1d3" />
+        <circle cx="110" cy="130" r="70" fill="#8fa9a3" />
+        <circle cx="190" cy="110" r="52" fill="#c9b84a" />
+        <circle cx="200" cy="170" r="40" fill="#9c8c9a" />
+        <rect x="0" y="0" width="320" height="260" class="m-ink" transform="translate(-10,-7)" />
+      </svg>
+
+      <!-- hall table + atomic lamp -->
+      <svg width="420" height="560" style="left:2820px;top:340px">
+        <polygon points="40,330 380,330 360,360 60,360" fill="#8fa9a3" />
+        <g class="m-ink" style="stroke-width:7">
+          <line x1="90" y1="360" x2="60" y2="520" />
+          <line x1="330" y1="360" x2="360" y2="520" />
+          <line x1="200" y1="360" x2="200" y2="520" />
+        </g>
+        <polygon points="40,330 380,330 360,360 60,360" class="m-ink" transform="translate(-10,-7)" />
+        <rect x="186" y="200" width="18" height="130" fill="#4a423d" />
+        <polygon points="120,90 270,90 310,200 80,200" fill="#c9b84a" />
+        <polygon points="120,90 270,90 310,200 80,200" class="m-ink" transform="translate(-10,-7)" />
+        <ellipse cx="195" cy="330" rx="60" ry="10" fill="#4a423d" />
+      </svg>
+
+      <!-- coat rack -->
+      <svg width="260" height="700" style="left:3420px;top:180px">
+        <line x1="130" y1="40" x2="130" y2="680" class="m-ink" style="stroke-width:10" />
+        <line x1="60" y1="680" x2="200" y2="680" class="m-ink" style="stroke-width:10" />
+        <line x1="130" y1="80" x2="70" y2="40" class="m-ink" style="stroke-width:7" />
+        <line x1="130" y1="80" x2="190" y2="40" class="m-ink" style="stroke-width:7" />
+        <ellipse cx="190" cy="44" rx="58" ry="16" fill="#9c8c9a" />
+        <rect x="160" y="0" width="60" height="44" fill="#9c8c9a" />
+      </svg>
+    </div>
+
+    <!-- ======== TITLES (screen-fixed, land and hold dead still) ======== -->
+    <div id="m-title" class="m-title clip" data-start="0" data-duration="1.95" data-track-index="2">
+      <span id="m-t1">Monday,</span>
+      <span id="m-t2">7:04 A.M.</span>
+    </div>
+    <div id="m-script" class="clip" data-start="2.4" data-duration="2.3" data-track-index="2">Rise and… shine?</div>
+
+    <!-- ======== FOREGROUND PILLAR: the doorway that wipes us into the kitchen ======== -->
+    <div id="m-pillar" class="clip" data-start="4.6" data-duration="0.4" data-track-index="3"
+         data-layout-allow-overflow data-layout-allow-occlusion>
+      <i style="left:260px"></i><i style="left:1700px"></i>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+
+      // CAMERA: a constant truck right, the classic limited-animation pan.
+      tl.fromTo("#m-set", { x: 0 }, { x: -1560, duration: 5, ease: "none" }, 0);
+
+      // ALARM: bells rattle on 2s (limited animation), three bursts.
+      tl.fromTo("#m-bells", { rotation: -7, svgOrigin: "250 40" },
+        { rotation: 7, svgOrigin: "250 40", duration: 0.067, ease: "steps(1)", repeat: 13, yoyo: true }, 0);
+      tl.set("#m-bells", { rotation: 0, svgOrigin: "250 40" }, 1.0);
+
+      // TITLE: "MONDAY," is there on frame 0; "7:04 A.M." stamps in on the second bell.
+      tl.fromTo("#m-t2", { opacity: 0, scale: 1.25, transformOrigin: "0% 50%" },
+        { opacity: 1, scale: 1, duration: 0.2, ease: "back.out(2)" }, 0.35);
+      tl.to("#m-title", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 1.72);
+
+      // DAD: the yawn opens on three drawings, holds, then he droops back to sleep.
+      tl.fromTo("#m-mouth", { attr: { ry: 5 } }, { attr: { ry: 36 }, duration: 0.3, ease: "steps(3)" }, 1.35);
+      tl.fromTo("#m-head", { rotation: 0, svgOrigin: "164 270" },
+        { rotation: -6, svgOrigin: "164 270", duration: 0.3, ease: "steps(3)" }, 1.35);
+      tl.to("#m-mouth", { attr: { ry: 8 }, duration: 0.2, ease: "steps(2)" }, 3.3);
+      tl.to("#m-head", { rotation: 9, svgOrigin: "164 270", duration: 0.3, ease: "steps(3)" }, 3.3);
+      tl.fromTo("#m-arm", { rotation: 0, svgOrigin: "250 300" },
+        { rotation: 14, svgOrigin: "250 300", duration: 0.2, ease: "steps(2)" }, 3.5);
+
+      // SCRIPT LINE: written on left to right, like a sign-painter's brush.
+      tl.fromTo("#m-script", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.45, ease: "power1.inOut" }, 2.45);
+
+      // WIPE: the doorway pillar crosses camera at the truck's speed x 20.
+      tl.fromTo("#m-pillar", { x: 1920 }, { x: -120, duration: 0.38, ease: "none" }, 4.6);
+
+      window.__timelines["morning"] = tl;
+    })();
+  </script>
+</template>

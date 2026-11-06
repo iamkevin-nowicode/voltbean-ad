@@ -1,0 +1,241 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #8fa9a3;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    #z-all { position: absolute; inset: 0; }
+    .z-layer { position: absolute; inset: 0; }
+    .z-layer svg, #z-all > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    .z-ink { fill: none; stroke: #0a0a0a; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+    /* the hero can, 1.52x */
+    #z-can {
+      position: absolute;
+      left: 560px;
+      top: 222px;
+      width: 240px;
+      height: 440px;
+      transform: scale(1.52);
+      transform-origin: 0% 0%;
+    }
+    #z-can svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    #z-can .can-mg {
+      position: absolute; left: 0; right: 0; top: 52px; text-align: center;
+      font-size: 54px; color: #ffe600; letter-spacing: 0.04em;
+    }
+    #z-can .can-name {
+      position: absolute; left: 0; right: 0; top: 250px; text-align: center;
+      font-size: 92px; line-height: 0.82; color: #0a0a0a;
+    }
+    #z-burst {
+      position: absolute;
+      left: 1080px;
+      top: 90px;
+      width: 640px;
+      height: 640px;
+    }
+    #z-burst svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    #z-burst .mg {
+      position: absolute; left: 0; right: 0; top: 190px; text-align: center;
+      font-size: 210px; line-height: 1; color: #fafafa;
+    }
+    #z-burst .sub {
+      position: absolute; left: 0; right: 0; top: 400px; text-align: center;
+      font-size: 52px; letter-spacing: 0.06em; color: #fafafa;
+    }
+    #z-script {
+      position: absolute;
+      left: 1060px;
+      top: 730px;
+      font-family: "Yellowtail", cursive;
+      font-size: 104px;
+      line-height: 1.25;
+      color: #0a0a0a;
+      white-space: nowrap;
+    }
+    #z-all > #z-dad { position: absolute; left: 1180px; top: 300px; }
+    #z-bolt { position: absolute; left: 0; top: 0; overflow: visible; }
+  </style>
+
+  <div id="root" data-composition-id="zap" data-width="1920" data-height="1080">
+    <div id="z-all" data-layout-allow-overflow>
+      <!-- BEFORE: dusty kitchen close-up -->
+      <div class="z-layer" id="z-dusty">
+        <svg width="1920" height="1080">
+          <defs>
+            <pattern id="z-paper-d" width="200" height="200" patternUnits="userSpaceOnUse">
+              <rect width="200" height="200" fill="#8fa9a3" />
+              <path d="M30,60 Q60,30 90,60 Q60,48 30,60 Z" fill="#9db5af" />
+              <path d="M130,150 Q160,120 190,150 Q160,138 130,150 Z" fill="#9db5af" />
+            </pattern>
+          </defs>
+          <rect width="1920" height="1080" fill="url(#z-paper-d)" />
+          <rect x="0" y="890" width="1920" height="190" fill="#c9b84a" />
+          <rect x="0" y="874" width="1920" height="40" fill="#e9e1d3" />
+          <line x1="0" y1="872" x2="1920" y2="872" stroke="#2b2724" stroke-width="5" />
+        </svg>
+      </div>
+
+      <!-- AFTER: the same close-up in full Voltbean colour, opened by an iris from the tab -->
+      <div class="z-layer" id="z-full">
+        <svg width="1920" height="1080">
+          <defs>
+            <pattern id="z-paper-f" width="200" height="200" patternUnits="userSpaceOnUse">
+              <rect width="200" height="200" fill="#ffe600" />
+              <path d="M30,60 Q60,30 90,60 Q60,48 30,60 Z" fill="#fff27a" />
+              <path d="M130,150 Q160,120 190,150 Q160,138 130,150 Z" fill="#fff27a" />
+            </pattern>
+          </defs>
+          <rect width="1920" height="1080" fill="url(#z-paper-f)" />
+          <rect x="0" y="890" width="1920" height="190" fill="#1fb5a8" />
+          <rect x="0" y="874" width="1920" height="40" fill="#fafafa" />
+          <line x1="0" y1="872" x2="1920" y2="872" stroke="#0a0a0a" stroke-width="5" />
+        </svg>
+      </div>
+
+      <!-- the can's flat offset shadow, then the can -->
+      <svg width="1920" height="1080">
+        <rect x="580" y="236" width="365" height="652" rx="38" fill="#0a0a0a" opacity="0.18" />
+      </svg>
+      <div id="z-can">
+        <svg width="240" height="440" viewBox="0 0 240 440">
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="#ffe600" />
+          <rect x="0" y="0" width="240" height="40" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="34" width="240" height="96" fill="#0a0a0a" />
+          <polygon points="150,140 70,250 124,250 92,350 182,226 128,226 170,140" fill="#ff1f7a" />
+          <rect x="0" y="404" width="240" height="36" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="none" stroke="#0a0a0a" stroke-width="6" transform="translate(-10,-7)" />
+          <!-- the ring-pull -->
+          <g id="z-tab">
+            <rect x="96" y="8" width="56" height="20" rx="10" fill="#8f8a84" />
+            <circle cx="140" cy="18" r="5" fill="#c9c4bd" />
+          </g>
+        </svg>
+        <div class="can-mg">1000 MG</div>
+        <div class="can-name">VOLT<br />BEAN</div>
+      </div>
+
+      <!-- the bolt that leaves the can -->
+      <svg id="z-bolt" width="1920" height="1080">
+        <g id="z-bolt-g">
+          <polygon points="752,250 640,120 720,110 600,-40 820,140 730,150 820,250" fill="#ff1f7a" />
+          <polygon points="752,250 640,120 720,110 600,-40 820,140 730,150 820,250" class="z-ink" transform="translate(-10,-7)" />
+        </g>
+      </svg>
+
+      <!-- Dad, jolted awake: spiked hair, eyes wide, now in full colour -->
+      <svg id="z-dad" width="520" height="800" viewBox="0 0 520 800">
+        <defs>
+          <pattern id="z-stripes" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="#ff1f7a" />
+            <rect width="12" height="30" fill="#fafafa" />
+          </pattern>
+        </defs>
+        <g id="z-dad-all">
+          <polygon points="110,330 410,330 370,800 150,800" fill="url(#z-stripes)" />
+          <polygon points="220,330 260,384 300,330" fill="#fafafa" />
+          <polygon points="110,330 410,330 370,800 150,800" class="z-ink" transform="translate(-10,-7)" />
+          <!-- both arms flung up -->
+          <polyline points="120,350 40,230 70,120" class="z-ink" style="stroke-width:11" />
+          <polyline points="400,350 480,230 450,120" class="z-ink" style="stroke-width:11" />
+          <circle cx="70" cy="108" r="22" fill="#f2b48c" />
+          <circle cx="450" cy="108" r="22" fill="#f2b48c" />
+          <rect x="236" y="300" width="46" height="44" fill="#f2b48c" />
+          <!-- spiked hair (grows on 3 drawings) -->
+          <g id="z-hair">
+            <polygon points="150,120 130,10 190,80 210,-30 250,70 290,-40 310,70 360,0 350,110 400,60 372,150 150,150" fill="#0a0a0a" />
+          </g>
+          <path d="M150,100 Q150,40 258,40 Q370,40 370,100 L376,250 Q376,320 266,320 Q150,320 146,250 Z" fill="#f2b48c" />
+          <path d="M150,100 Q150,40 258,40 Q370,40 370,100 L376,250 Q376,320 266,320 Q150,320 146,250 Z" class="z-ink" transform="translate(-10,-7)" />
+          <!-- eyes: closed, then snap wide open -->
+          <g id="z-eyes-shut">
+            <path d="M190,150 Q210,166 230,150" class="z-ink" />
+            <path d="M286,150 Q306,166 326,150" class="z-ink" />
+          </g>
+          <g id="z-eyes-open" opacity="0">
+            <circle cx="210" cy="150" r="30" fill="#fafafa" />
+            <circle cx="306" cy="150" r="30" fill="#fafafa" />
+            <circle cx="214" cy="154" r="11" fill="#0a0a0a" />
+            <circle cx="302" cy="154" r="11" fill="#0a0a0a" />
+            <circle cx="210" cy="150" r="30" class="z-ink" style="stroke-width:5" />
+            <circle cx="306" cy="150" r="30" class="z-ink" style="stroke-width:5" />
+          </g>
+          <ellipse id="z-mouth" cx="262" cy="268" rx="40" ry="8" fill="#a8233f" />
+          <polygon points="252,150 330,230 250,238" fill="#e39a72" />
+          <polygon points="252,150 330,230 250,238" class="z-ink" style="stroke-width:5" transform="translate(-6,-4)" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- ad copy (screen-fixed) -->
+    <div id="z-burst" class="clip" data-start="0.38" data-duration="1.82" data-track-index="2">
+      <svg width="640" height="640" viewBox="0 0 600 600">
+        <polygon points="300,0 358,83 450,40 459,141 560,150 517,242 600,300 517,358 560,450 459,459 450,560 358,517 300,600 242,517 150,560 141,459 40,450 83,358 0,300 83,242 40,150 141,141 150,40 242,83" fill="#ff1f7a" />
+        <polygon points="300,0 358,83 450,40 459,141 560,150 517,242 600,300 517,358 560,450 459,459 450,560 358,517 300,600 242,517 150,560 141,459 40,450 83,358 0,300 83,242 40,150 141,141 150,40 242,83" fill="none" stroke="#0a0a0a" stroke-width="6" stroke-linejoin="round" transform="translate(-10,-7)" />
+      </svg>
+      <div class="mg">1000 MG!</div>
+      <div class="sub">CAFFEINE PER CAN</div>
+    </div>
+    <div id="z-script" class="clip" data-start="0.85" data-duration="1.35" data-track-index="2">Electrified cold brew.</div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+
+      // the full-colour world waits behind a closed iris; Dad waits below frame; the bolt is unlit
+      tl.set("#z-full", { clipPath: "circle(0px at 742px 236px)" }, 0);
+      tl.set("#z-bolt-g", { scaleY: 0, svgOrigin: "752 250", opacity: 1 }, 0);
+      tl.set("#z-dad", { y: 820 }, 0);
+
+      // a slow settle on the hero (the punch-in lands slightly large)
+      tl.fromTo("#z-all", { scale: 1.06, transformOrigin: "680px 560px" },
+        { scale: 1, transformOrigin: "680px 560px", duration: 0.5, ease: "expo.out" }, 0);
+
+      // STARBURST stamps in, then holds dead still
+      tl.fromTo("#z-burst", { scale: 0.2, rotation: -20, transformOrigin: "50% 50%" },
+        { scale: 1, rotation: 0, duration: 0.3, ease: "back.out(2)" }, 0.4);
+      tl.fromTo("#z-script", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.4, ease: "power1.inOut" }, 0.9);
+
+      // RING-PULL cracks (1.4), the BOLT leaves the can in three drawings (1.5)
+      tl.fromTo("#z-tab", { rotation: 0, svgOrigin: "100 18" },
+        { rotation: -55, svgOrigin: "100 18", duration: 0.1, ease: "steps(2)" }, 1.4);
+      tl.to("#z-bolt-g", { scaleY: 1, svgOrigin: "752 250", duration: 0.1, ease: "steps(3)" }, 1.5);
+      tl.to("#z-bolt-g", { opacity: 0, duration: 0.2, ease: "steps(1)", repeat: 2, yoyo: true }, 1.65);
+      tl.set("#z-bolt-g", { opacity: 0 }, 2.26);
+
+      // COLOUR FLOOD: the iris opens from the ring-pull and the world turns Voltbean
+      tl.to("#z-full", { clipPath: "circle(2300px at 742px 236px)", duration: 0.5, ease: "power2.in" }, 1.55);
+
+      // copy leaves before Dad arrives
+      tl.to("#z-burst", { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, 2.0);
+      tl.to("#z-script", { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, 2.0);
+
+      // DAD bolts up into frame: anticipation dip, overshoot, settle (a take, not a slide)
+      tl.to("#z-dad", { y: 860, duration: 0.1, ease: "power2.out" }, 2.25);
+      tl.to("#z-dad", { y: -40, duration: 0.22, ease: "power3.out" }, 2.35);
+      tl.to("#z-dad", { y: 0, duration: 0.2, ease: "power2.inOut" }, 2.57);
+      tl.fromTo("#z-hair", { scaleY: 0.3, svgOrigin: "260 150" },
+        { scaleY: 1.1, svgOrigin: "260 150", duration: 0.24, ease: "steps(3)" }, 2.45);
+      tl.set("#z-eyes-shut", { opacity: 0 }, 2.62);
+      tl.set("#z-eyes-open", { opacity: 1 }, 2.62);
+      tl.fromTo("#z-mouth", { attr: { ry: 8 } }, { attr: { ry: 30 }, duration: 0.14, ease: "steps(2)" }, 2.62);
+
+      // after the flood the stage itself is voltage yellow (what the whip reveals)
+      tl.set("#root", { backgroundColor: "#ffe600" }, 2.1);
+
+      // WHIP: the whole shot accelerates out to the left into the morning rush
+      tl.to("#z-all", { x: -2300, duration: 0.36, ease: "power3.in" }, 3.6);
+
+      window.__timelines["zap"] = tl;
+    })();
+  </script>
+</template>

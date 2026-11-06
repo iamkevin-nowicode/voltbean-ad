@@ -1,863 +1,129 @@
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"color-voltage","type":"color","label":"Voltage yellow","default":"#FFE600"},
+    {"id":"color-chaos","type":"color","label":"Chaos pink","default":"#FF1F7A"},
+    {"id":"color-teal","type":"color","label":"Atomic teal","default":"#1FB5A8"},
+    {"id":"color-ink","type":"color","label":"Ink","default":"#0A0A0A"}
+  ]'
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/vendor/gsap.min.js"></script>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body {
-        width: 1920px; height: 1080px; overflow: hidden;
-        background: #0A0A0A;
-        font-family: "Archivo Black", "Anton", "Bebas Neue", "Impact", sans-serif;
+      :root {
+        --color-voltage: #ffe600;
+        --color-chaos: #ff1f7a;
+        --color-teal: #1fb5a8;
+        --color-ink: #0a0a0a;
       }
-
-      /* voltage: #FFE600, chaos: #FF1F7A, arc: #FAFAFA, warn: #FF2233, ink: #0A0A0A */
-
-      .scene {
-        position: absolute; top: 0; left: 0;
-        width: 1920px; height: 1080px;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
         overflow: hidden;
-        background: #0A0A0A;
+        background: #c79aa2;
       }
-      #s1  { z-index: 1; }
-      #s2, #s3, #s4, #s5, #s6, #s7, #s8, #s9, #s10, #s11, #s12, #s13 {
-        z-index: 1; opacity: 0;
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
       }
-
-      #glitch-r, #glitch-g, #glitch-b,
-      #flash-overlay, #leak-warm, #leak-1, #leak-2,
-      #wipe-a, #wipe-b, #wipe-c,
-      #scanline, #vignette {
-        position: absolute; top: 0; left: 0;
-        width: 1920px; height: 1080px;
+      /* Printed-paper grain over every scene: the medium's paper, not an effect. */
+      #grain {
+        position: absolute;
+        inset: 0;
+        z-index: 50;
         pointer-events: none;
-      }
-      #glitch-r, #glitch-g, #glitch-b { z-index: 50; opacity: 0; mix-blend-mode: screen; }
-      #glitch-r { background: radial-gradient(ellipse at center, rgba(255, 34, 51, 0.55), rgba(255, 34, 51, 0) 70%); }
-      #glitch-g { background: radial-gradient(ellipse at center, rgba(0, 255, 120, 0.4), rgba(0, 255, 120, 0) 70%); }
-      #glitch-b { background: radial-gradient(ellipse at center, rgba(30, 120, 255, 0.55), rgba(30, 120, 255, 0) 70%); }
-
-      #flash-overlay { z-index: 60; background: #FAFAFA; opacity: 0; }
-      #leak-warm { z-index: 55; background: #FFE600; opacity: 0; mix-blend-mode: screen; }
-      #leak-1 { z-index: 56; left: -600px; top: -400px; width: 2600px; height: 2000px;
-        background: radial-gradient(circle, rgba(255, 230, 0, 0.9) 0%, rgba(255, 230, 0, 0) 40%);
-        opacity: 0; mix-blend-mode: screen; }
-      #leak-2 { z-index: 56; left: 600px; top: 200px; width: 2400px; height: 1800px;
-        background: radial-gradient(circle, rgba(255, 31, 122, 0.85) 0%, rgba(255, 31, 122, 0) 45%);
-        opacity: 0; mix-blend-mode: screen; }
-
-      #wipe-a, #wipe-b, #wipe-c { z-index: 70; transform: translateX(-1920px); }
-      #wipe-a { background: #FFE600; }
-      #wipe-b { background: #FF1F7A; }
-      #wipe-c { background: #0A0A0A; }
-
-      #scanline { z-index: 65; opacity: 0.08;
-        background: repeating-linear-gradient(0deg,
-          rgba(255,255,255,0.35) 0px, rgba(255,255,255,0.35) 1px,
-          rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px);
-      }
-      #vignette { z-index: 66; opacity: 0.55;
-        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
-      }
-
-      .display {
-        font-family: "Archivo Black", "Anton", "Impact", sans-serif;
-        font-weight: 900; letter-spacing: -0.02em; line-height: 0.85;
-        text-transform: uppercase;
-      }
-      .mono { font-family: "JetBrains Mono", "IBM Plex Mono", monospace; }
-
-      /* ============ SCENE 1: UGHHH ============ */
-      #s1 { background: #0A0A0A; display: flex; align-items: center; justify-content: center; }
-      #s1 .ugh {
-        font-size: 520px; color: #FAFAFA; line-height: 0.8;
-        letter-spacing: -0.04em; text-transform: uppercase;
-        font-family: "Archivo Black", "Impact", sans-serif;
-      }
-      #s1 .mon-label {
-        position: absolute; top: 90px; left: 90px;
-        font-size: 34px; color: #FFE600; letter-spacing: 0.35em;
-      }
-      #s1 .yawn {
-        position: absolute; bottom: 130px; right: 120px;
-        font-size: 44px; color: #FF1F7A; letter-spacing: 0.2em;
-        transform: rotate(-4deg);
-      }
-
-      /* ============ SCENE 2: COFFEE WEAK ============ */
-      #s2 { background: #FAFAFA; }
-      #s2 .bad-coffee {
-        position: absolute; top: 100px; left: 80px;
-        font-size: 240px; color: #0A0A0A; line-height: 0.85;
-        font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em;
-      }
-      #s2 .strike {
-        position: absolute; top: 330px; left: 70px;
-        width: 1600px; height: 32px; background: #FF2233;
-        transform-origin: left center; transform: scaleX(0) rotate(-3deg);
-      }
-      #s2 .wake-what {
-        position: absolute; bottom: 140px; left: 90px; right: 90px;
-        font-size: 120px; color: #FF2233; line-height: 0.9;
-        font-weight: 900; text-transform: uppercase;
-      }
-      #s2 .zzz {
-        position: absolute; top: 180px; right: 120px;
-        font-size: 380px; color: #FFE600; line-height: 0.8;
-        transform: rotate(12deg); letter-spacing: -0.04em;
-        font-weight: 900;
-      }
-
-      /* ============ SCENE 3: LIGHTNING INTRO ============ */
-      #s3 { background: #0A0A0A; }
-      #s3 .bolt {
-        position: absolute; left: 50%; top: 0; width: 280px; height: 1080px;
-        transform: translateX(-50%) scaleY(0); transform-origin: top center;
-      }
-      #s3 .bolt svg { width: 100%; height: 100%; display: block; }
-      #s3 .intro-top {
-        position: absolute; top: 280px; left: 0; right: 0;
-        font-size: 80px; color: #FFE600; text-align: center;
-        letter-spacing: 0.6em; text-transform: uppercase; font-weight: 900;
-      }
-      #s3 .intro-big {
-        position: absolute; bottom: 240px; left: 0; right: 0;
-        font-size: 340px; color: #FAFAFA; text-align: center;
-        line-height: 0.85; letter-spacing: -0.04em;
-        font-family: "Archivo Black", "Impact", sans-serif; font-weight: 900;
-      }
-      #s3 .spark {
-        position: absolute; border-radius: 50%; background: #FFE600;
-        box-shadow: 0 0 40px #FFE600, 0 0 80px #FFE600;
-      }
-
-      /* ============ SCENE 4: VOLTBEAN SLAM ============ */
-      #s4 { background: #FFE600; }
-      #s4 .volt-word {
-        position: absolute; left: 40px; top: 180px;
-        font-size: 620px; color: #0A0A0A; line-height: 0.8;
-        letter-spacing: -0.055em; font-weight: 900;
-        font-family: "Archivo Black", "Impact", sans-serif;
-      }
-      #s4 .bean-word {
-        position: absolute; right: 40px; bottom: 120px;
-        font-size: 460px; color: #FF1F7A; line-height: 0.8;
-        letter-spacing: -0.05em; font-weight: 900;
-        font-family: "Archivo Black", "Impact", sans-serif;
-        -webkit-text-stroke: 6px #0A0A0A;
-      }
-      #s4 .corner-tag {
-        position: absolute; top: 70px; right: 80px;
-        font-size: 40px; color: #0A0A0A; letter-spacing: 0.3em;
-        background: #FF1F7A; padding: 18px 28px; transform: rotate(4deg);
-        border: 4px solid #0A0A0A; font-weight: 700;
-      }
-
-      /* ============ SCENE 5: 1000MG STAT ============ */
-      #s5 { background: #0A0A0A; }
-      #s5 .stat-label {
-        position: absolute; top: 160px; left: 140px;
-        font-size: 54px; color: #FFE600; letter-spacing: 0.3em;
-        font-weight: 900; text-transform: uppercase;
-      }
-      #s5 .stat-num {
-        position: absolute; left: 0; right: 0; top: 220px;
-        text-align: center;
-        font-size: 680px; line-height: 0.85;
-        color: #FAFAFA; letter-spacing: -0.06em; font-weight: 900;
-        font-family: "Archivo Black", "Impact", sans-serif;
-        font-variant-numeric: tabular-nums;
-      }
-      #s5 .stat-unit {
-        position: absolute; bottom: 180px; left: 0; right: 0;
-        text-align: center;
-        font-size: 120px; color: #FF1F7A; letter-spacing: 0.05em;
-        font-weight: 900;
-      }
-      #s5 .stat-sub {
-        position: absolute; bottom: 90px; left: 0; right: 0;
-        text-align: center; font-size: 32px; color: #FAFAFA;
-        letter-spacing: 0.4em;
-      }
-
-      /* ============ SCENE 6: REVIEWS ============ */
-      #s6 { background: #FAFAFA; }
-      #s6 .review {
-        position: absolute; font-size: 110px; line-height: 0.95;
-        font-weight: 900; text-transform: uppercase;
-        letter-spacing: -0.02em; max-width: 1400px;
-      }
-      #s6 .r1 { top: 120px; left: 120px; color: #0A0A0A; transform: rotate(-3deg); }
-      #s6 .r2 { top: 360px; right: 140px; color: #FF1F7A; text-align: right; transform: rotate(2deg); }
-      #s6 .r3 { top: 580px; left: 180px; color: #FF2233; transform: rotate(-1deg); }
-      #s6 .r4 { bottom: 80px; right: 120px; color: #0A0A0A; text-align: right; transform: rotate(3deg); }
-      #s6 .stars {
-        position: absolute; top: 70px; right: 120px;
-        font-size: 64px; color: #FFE600; letter-spacing: 0.15em;
-      }
-      #s6 .stars span { display: inline-block; }
-
-      /* ============ SCENE 7: NOT A DRILL ============ */
-      #s7 { background: #FF2233; }
-      #s7 .warn-stripe {
-        position: absolute; top: 0; left: 0; right: 0; height: 140px;
-        background: repeating-linear-gradient(45deg,
-          #0A0A0A 0px, #0A0A0A 60px, #FFE600 60px, #FFE600 120px);
-      }
-      #s7 .warn-stripe.bot { top: auto; bottom: 0; }
-      #s7 .warn-word {
-        position: absolute; left: 0; right: 0; top: 260px;
-        text-align: center; font-size: 360px; line-height: 0.85;
-        color: #0A0A0A; letter-spacing: -0.05em; font-weight: 900;
-      }
-      #s7 .drill {
-        position: absolute; left: 0; right: 0; bottom: 260px;
-        text-align: center; font-size: 200px; color: #FAFAFA;
-        letter-spacing: 0.02em; font-weight: 900;
-        -webkit-text-stroke: 4px #0A0A0A;
-      }
-
-      /* ============ SCENE 8: FORGED IN THUNDER ============ */
-      #s8 { background: #0A0A0A; }
-      #s8 .forged {
-        position: absolute; top: 160px; left: 80px;
-        font-size: 230px; color: #FAFAFA; line-height: 0.85;
-        font-weight: 900; letter-spacing: -0.03em;
-      }
-      #s8 .thunder {
-        position: absolute; top: 420px; left: 80px; right: 80px;
-        font-size: 440px; line-height: 0.85;
-        color: transparent; -webkit-text-stroke: 3px #FFE600;
-        font-weight: 900; letter-spacing: -0.04em;
-      }
-      #s8 .thunder-fill {
-        position: absolute; top: 420px; left: 80px;
-        font-size: 440px; line-height: 0.85;
-        color: #FFE600; font-weight: 900; letter-spacing: -0.04em;
-        clip-path: inset(100% 0 0 0);
-      }
-      #s8 .runes {
-        position: absolute; bottom: 80px; left: 80px; right: 80px;
-        font-size: 38px; color: #FF1F7A; letter-spacing: 0.5em;
-        text-align: center;
-      }
-
-      /* ============ SCENE 9: 0 -> WIRED ============ */
-      #s9 { background: #FFE600; }
-      #s9 .speed-line {
-        position: absolute; height: 14px; background: #0A0A0A;
-        transform: translateX(-2000px);
-      }
-      #s9 .zero-num {
-        position: absolute; left: 80px; top: 280px;
-        font-size: 560px; color: #0A0A0A; line-height: 0.85;
-        font-weight: 900; letter-spacing: -0.05em;
-        font-variant-numeric: tabular-nums;
-      }
-      #s9 .dash {
-        position: absolute; left: 540px; top: 440px;
-        font-size: 360px; color: #FF1F7A; font-weight: 900;
-      }
-      #s9 .wired {
-        position: absolute; right: 80px; top: 360px;
-        font-size: 320px; color: #0A0A0A; text-align: right;
-        font-weight: 900; letter-spacing: -0.04em; line-height: 0.85;
-      }
-      #s9 .secs {
-        position: absolute; bottom: 120px; left: 0; right: 0;
-        text-align: center; font-size: 60px; color: #0A0A0A;
-        letter-spacing: 0.3em; font-weight: 900;
-      }
-
-      /* ============ SCENE 10: CAN HERO ============ */
-      #s10 { background: #0A0A0A; }
-      #s10 .can-stage {
-        position: absolute; left: 50%; top: 50%;
-        transform: translate(-50%, -50%);
-        width: 720px; height: 980px;
-      }
-      #s10 .can-glow {
-        position: absolute; left: 50%; top: 50%;
-        width: 1800px; height: 1800px; transform: translate(-50%, -50%);
-        background: radial-gradient(circle,
-          rgba(255, 230, 0, 0.7) 0%,
-          rgba(255, 230, 0, 0.25) 25%,
-          rgba(255, 31, 122, 0.15) 45%,
-          rgba(255, 230, 0, 0) 65%);
-        filter: blur(8px);
-      }
-      #s10 .can {
-        position: absolute; left: 0; top: 0; width: 720px; height: 980px;
-        background:
-          linear-gradient(90deg,
-            rgba(0,0,0,0.55) 0%,
-            rgba(0,0,0,0) 20%,
-            rgba(255,255,255,0.18) 45%,
-            rgba(255,255,255,0) 60%,
-            rgba(0,0,0,0.55) 100%),
-          linear-gradient(180deg, #FFE600 0%, #FFE600 78%, #FF1F7A 78%, #FF1F7A 100%);
-        border-radius: 60px 60px 28px 28px;
-        box-shadow:
-          inset 0 40px 0 rgba(0,0,0,0.15),
-          inset 0 -40px 0 rgba(0,0,0,0.12),
-          0 60px 120px rgba(255, 230, 0, 0.35);
-        border: 4px solid #0A0A0A;
-      }
-      #s10 .can-top {
-        position: absolute; top: -24px; left: 50%;
-        transform: translateX(-50%);
-        width: 660px; height: 44px; background: #3a3a3a;
-        border-radius: 20px; border: 3px solid #0A0A0A;
-      }
-      #s10 .can-label {
-        position: absolute; top: 260px; left: 0; right: 0;
-        text-align: center; font-size: 112px;
-        color: #0A0A0A; font-weight: 900; letter-spacing: -0.04em;
-        line-height: 0.85;
-      }
-      #s10 .can-sub {
-        position: absolute; top: 440px; left: 0; right: 0;
-        text-align: center; font-size: 28px;
-        color: #0A0A0A; letter-spacing: 0.35em; font-weight: 900;
-      }
-      #s10 .can-mg {
-        position: absolute; top: 490px; left: 0; right: 0;
-        text-align: center; font-size: 84px;
-        color: #FF1F7A; -webkit-text-stroke: 3px #0A0A0A;
-        font-weight: 900; letter-spacing: -0.02em;
-      }
-      #s10 .can-bolt {
-        position: absolute; top: 620px; left: 50%;
-        transform: translateX(-50%);
-        width: 130px; height: 180px;
-      }
-      #s10 .orbit-bolt {
-        position: absolute; width: 90px; height: 140px;
-        filter: drop-shadow(0 0 20px #FFE600);
-      }
-      #s10 .taste-tag {
-        position: absolute; top: 180px; right: 80px;
-        font-size: 56px; color: #FFE600; letter-spacing: 0.2em;
-        font-weight: 900; transform: rotate(8deg);
-        background: #FF1F7A; padding: 20px 32px; border: 4px solid #FFE600;
-      }
-      #s10 .caf-tag {
-        position: absolute; bottom: 120px; left: 80px;
-        font-size: 50px; color: #0A0A0A; letter-spacing: 0.1em;
-        font-weight: 900; background: #FFE600; padding: 18px 28px;
-        border: 4px solid #0A0A0A; transform: rotate(-5deg);
-      }
-
-      /* ============ SCENE 11: SIDE EFFECTS ============ */
-      #s11 { background: #FAFAFA; }
-      #s11 .side-title {
-        position: absolute; top: 70px; left: 90px;
-        font-size: 110px; color: #0A0A0A; font-weight: 900;
-        line-height: 0.9; letter-spacing: -0.03em;
-      }
-      #s11 .side-title em {
-        color: #FF2233; font-style: normal;
-      }
-      #s11 .eff-list {
-        position: absolute; top: 320px; left: 90px; right: 90px;
-        display: flex; flex-direction: column; gap: 14px;
-      }
-      #s11 .eff {
-        font-size: 68px; color: #0A0A0A; font-weight: 900;
-        letter-spacing: -0.02em; text-transform: uppercase;
-        line-height: 1;
-      }
-      #s11 .eff.pink { color: #FF1F7A; }
-      #s11 .eff.red { color: #FF2233; }
-      #s11 .small-print {
-        position: absolute; bottom: 40px; left: 90px; right: 90px;
-        font-size: 22px; color: #0A0A0A; letter-spacing: 0.08em;
-      }
-
-      /* ============ SCENE 12: LOGO STAMPEDE ============ */
-      #s12 { background: #FF1F7A; }
-      #s12 .row {
-        position: absolute; left: 0; width: 3200px;
-        font-size: 220px; line-height: 1;
-        color: #FFE600; font-weight: 900;
-        letter-spacing: -0.04em; white-space: nowrap;
-        -webkit-text-stroke: 3px #0A0A0A;
-      }
-      #s12 .row.r1 { top: 20px; }
-      #s12 .row.r2 { top: 240px; color: #0A0A0A; -webkit-text-stroke: 0; }
-      #s12 .row.r3 { top: 460px; color: #FAFAFA; -webkit-text-stroke: 3px #0A0A0A; }
-      #s12 .row.r4 { top: 680px; color: #0A0A0A; -webkit-text-stroke: 0; }
-      #s12 .row.r5 { top: 900px; color: #FFE600; -webkit-text-stroke: 3px #0A0A0A; }
-
-      /* ============ SCENE 13: FINAL LOCK ============ */
-      #s13 { background: #0A0A0A; }
-      #s13 .mini-can {
-        position: absolute; left: 140px; top: 50%; transform: translateY(-50%);
-        width: 280px; height: 420px;
-        background: linear-gradient(180deg, #FFE600 0%, #FFE600 78%, #FF1F7A 78%, #FF1F7A 100%);
-        border-radius: 26px 26px 14px 14px;
-        border: 4px solid #FAFAFA;
-        box-shadow: 0 40px 80px rgba(255, 230, 0, 0.4);
-      }
-      #s13 .mini-can::before {
-        content: ""; position: absolute; top: -14px; left: 50%;
-        transform: translateX(-50%);
-        width: 250px; height: 22px; background: #3a3a3a;
-        border-radius: 10px; border: 2px solid #0A0A0A;
-      }
-      #s13 .mini-label {
-        position: absolute; top: 130px; left: 0; right: 0; text-align: center;
-        font-size: 40px; color: #0A0A0A; font-weight: 900;
-        line-height: 0.9;
-      }
-      #s13 .lock {
-        position: absolute; left: 500px; top: 140px; right: 100px;
-      }
-      #s13 .final-top {
-        font-size: 54px; color: #FFE600; letter-spacing: 0.4em;
-        font-weight: 900; margin-bottom: 20px;
-      }
-      #s13 .final-brand {
-        font-size: 260px; color: #FAFAFA; line-height: 0.85;
-        font-weight: 900; letter-spacing: -0.04em;
-      }
-      #s13 .final-tag {
-        margin-top: 30px; font-size: 70px; color: #FF1F7A;
-        font-weight: 900; letter-spacing: -0.02em; line-height: 0.95;
-        max-width: 1200px;
-      }
-      #s13 .legal {
-        position: absolute; bottom: 40px; left: 100px; right: 100px;
-        font-size: 20px; color: #FAFAFA; opacity: 0.55;
-        letter-spacing: 0.12em; text-align: center;
-        font-family: "JetBrains Mono", monospace;
+        background-image: url("assets/grain.png");
+        background-size: 256px 256px;
+        mix-blend-mode: multiply;
+        opacity: 0.55;
       }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main"
-         data-start="0" data-duration="30"
-         data-width="1920" data-height="1080">
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="30"
+      data-width="1920"
+      data-height="1080"
+      data-motion-blur="on"
+    >
+      <!-- ============ SCENES (one per file) ============ -->
+      <div id="morning" data-composition-id="morning" data-composition-src="compositions/morning.html"
+           data-start="0" data-duration="5" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080" style="z-index: 1"></div>
 
-      <!-- SCENE 1 -->
-      <div id="s1" class="scene">
-        <div class="mon-label mono">MONDAY // 07:04 AM</div>
-        <div class="ugh display">UGHHH.</div>
-        <div class="yawn mono">*yawns audibly*</div>
-      </div>
+      <div id="kitchen" data-composition-id="kitchen" data-composition-src="compositions/kitchen.html"
+           data-start="5" data-duration="5.5" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080" style="z-index: 2"></div>
 
-      <!-- SCENE 2 -->
-      <div id="s2" class="scene">
-        <div class="zzz display">Zzz</div>
-        <div class="bad-coffee display">YOUR<br/>COFFEE<br/>IS WEAK.</div>
-        <div class="strike"></div>
-        <div class="wake-what display">Wake up, already.</div>
-      </div>
+      <div id="zap" data-composition-id="zap" data-composition-src="compositions/zap.html"
+           data-start="10.5" data-duration="4" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080" style="z-index: 3"></div>
 
-      <!-- SCENE 3 -->
-      <div id="s3" class="scene">
-        <div class="bolt">
-          <svg viewBox="0 0 280 1080" preserveAspectRatio="none">
-            <polygon points="160,0 80,520 180,520 60,1080 240,460 130,460 220,0"
-                     fill="#FFE600" stroke="#FAFAFA" stroke-width="4"/>
-          </svg>
-        </div>
-        <div class="spark" style="top: 120px; left: 280px; width: 18px; height: 18px;"></div>
-        <div class="spark" style="top: 880px; right: 300px; width: 26px; height: 26px;"></div>
-        <div class="spark" style="top: 460px; left: 180px; width: 12px; height: 12px;"></div>
-        <div class="spark" style="top: 720px; right: 220px; width: 22px; height: 22px;"></div>
-        <div class="intro-top display">INTRODUCING</div>
-        <div class="intro-big display">A NEW<br/>BEAST.</div>
-      </div>
+      <div id="rush" data-composition-id="rush" data-composition-src="compositions/rush.html"
+           data-start="14.5" data-duration="8" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080" style="z-index: 4"></div>
 
-      <!-- SCENE 4 -->
-      <div id="s4" class="scene">
-        <div class="volt-word display">VOLT</div>
-        <div class="bean-word display">BEAN</div>
-        <div class="corner-tag mono">EST. 2026</div>
-      </div>
+      <div id="endcard" data-composition-id="endcard" data-composition-src="compositions/endcard.html"
+           data-start="22.5" data-duration="7.5" data-track-index="1" data-track-kind="graphics"
+           data-width="1920" data-height="1080" style="z-index: 5"></div>
 
-      <!-- SCENE 5 -->
-      <div id="s5" class="scene">
-        <div class="stat-label display">PER CAN:</div>
-        <div class="stat-num display" id="mg-num">0</div>
-        <div class="stat-unit display">MILLIGRAMS OF CAFFEINE</div>
-        <div class="stat-sub mono">~11x ESPRESSO // DO NOT REFUEL WITH WATER</div>
-      </div>
+      <!-- ============ PAPER GRAIN ============ -->
+      <div id="grain" class="clip" data-start="0" data-duration="30" data-track-index="2"
+           data-layout-ignore></div>
 
-      <!-- SCENE 6 -->
-      <div id="s6" class="scene">
-        <div class="stars display"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <div class="review r1 display">"I SAW<br/>GOD."</div>
-        <div class="review r2 display">"CAN'T FEEL<br/>MY LEGS."</div>
-        <div class="review r3 display">"9/10<br/>DOCTORS FLED."</div>
-        <div class="review r4 display">"TASTES LIKE<br/>A VICTORY."</div>
-      </div>
+      <!-- ============ MUSIC SLOT ============
+           Drop a 30 s bed here (120 BPM grid: hits land on 0.5 s beats).
+           <audio id="music" class="clip" src="assets/music/bed.mp3" data-start="0"
+                  data-duration="30" data-track-index="10" data-volume="0.8"
+                  data-fade-in="0.4" data-fade-out="1.5"></audio>
+      -->
 
-      <!-- SCENE 7 -->
-      <div id="s7" class="scene">
-        <div class="warn-stripe"></div>
-        <div class="warn-stripe bot"></div>
-        <div class="warn-word display">NOT A</div>
-        <div class="drill display">DRILL.</div>
-      </div>
-
-      <!-- SCENE 8 -->
-      <div id="s8" class="scene">
-        <div class="forged display">Forged in</div>
-        <div class="thunder display">THUNDER.</div>
-        <div class="thunder-fill display">THUNDER.</div>
-        <div class="runes mono">VOLTAGE CERTIFIED</div>
-      </div>
-
-      <!-- SCENE 9 -->
-      <div id="s9" class="scene">
-        <div class="speed-line" style="top: 140px; width: 1600px;"></div>
-        <div class="speed-line" style="top: 240px; width: 1200px;"></div>
-        <div class="speed-line" style="top: 860px; width: 1400px;"></div>
-        <div class="speed-line" style="top: 960px; width: 1000px;"></div>
-        <div class="zero-num display">0</div>
-        <div class="dash display">&mdash;</div>
-        <div class="wired display">WIRED</div>
-        <div class="secs mono">IN 3.2 SECONDS FLAT</div>
-      </div>
-
-      <!-- SCENE 10 -->
-      <div id="s10" class="scene">
-        <div class="taste-tag mono">FLAVOR: STORM</div>
-        <div class="caf-tag mono">1000MG CAFFEINE</div>
-        <div class="can-glow"></div>
-        <div class="can-stage">
-          <div class="can">
-            <div class="can-top"></div>
-            <div class="can-label display">VOLT<br/>BEAN</div>
-            <div class="can-sub display">ELECTRIFIED COLD BREW</div>
-            <div class="can-mg display">1000MG</div>
-            <svg class="can-bolt" viewBox="0 0 130 180">
-              <polygon points="70,0 20,90 60,90 30,180 110,70 70,70 90,0"
-                       fill="#0A0A0A" stroke="#FF1F7A" stroke-width="3"/>
-            </svg>
-          </div>
-        </div>
-        <svg class="orbit-bolt" id="orbit-bolt-1" style="top: 200px; left: 220px;" viewBox="0 0 80 120">
-          <polygon points="45,0 15,60 40,60 20,120 65,55 40,55 55,0" fill="#FFE600"/>
-        </svg>
-        <svg class="orbit-bolt" id="orbit-bolt-2" style="top: 700px; right: 220px;" viewBox="0 0 80 120">
-          <polygon points="45,0 15,60 40,60 20,120 65,55 40,55 55,0" fill="#FF1F7A"/>
-        </svg>
-      </div>
-
-      <!-- SCENE 11 -->
-      <div id="s11" class="scene">
-        <div class="side-title display">KNOWN<br/>SIDE <em>EFFECTS:</em></div>
-        <div class="eff-list">
-          <div class="eff">&gt; CRUSHING INBOXES IN ONE SITTING</div>
-          <div class="eff pink">&gt; SEEING SOUND IN 4K</div>
-          <div class="eff">&gt; SPONTANEOUS PARKOUR</div>
-          <div class="eff red">&gt; HEARTBEAT IN DOLBY ATMOS</div>
-          <div class="eff">&gt; BECOMING LEGEND</div>
-        </div>
-        <div class="small-print mono">* REGULATING AGENCIES WERE NOT CONSULTED. WE'RE SORRY. KIND OF.</div>
-      </div>
-
-      <!-- SCENE 12 -->
-      <div id="s12" class="scene">
-        <div class="row r1 display">VOLTBEAN / VOLTBEAN / VOLTBEAN / VOLTBEAN</div>
-        <div class="row r2 display">/ VOLTBEAN / VOLTBEAN / VOLTBEAN / VOLTBEAN</div>
-        <div class="row r3 display">VOLTBEAN / VOLTBEAN / VOLTBEAN / VOLTBEAN</div>
-        <div class="row r4 display">/ VOLTBEAN / VOLTBEAN / VOLTBEAN / VOLTBEAN</div>
-        <div class="row r5 display">VOLTBEAN / VOLTBEAN / VOLTBEAN / VOLTBEAN</div>
-      </div>
-
-      <!-- SCENE 13 -->
-      <div id="s13" class="scene">
-        <div class="mini-can">
-          <div class="mini-label display">VOLT<br/>BEAN</div>
-        </div>
-        <div class="lock">
-          <div class="final-top display">VOLTBEAN&reg;</div>
-          <div class="final-brand display">DRINK<br/>AT YOUR<br/>OWN RISK.</div>
-          <div class="final-tag display">Coffee is dead. Long live voltage.</div>
-        </div>
-        <div class="legal mono">NOT FDA APPROVED // NOT OSHA APPROVED // NOT APPROVED BY ANYONE, REALLY // (c) VOLTBEAN MMXXVI</div>
-      </div>
-
-      <!-- OVERLAYS -->
-      <div id="glitch-r"></div>
-      <div id="glitch-g"></div>
-      <div id="glitch-b"></div>
-      <div id="leak-warm"></div>
-      <div id="leak-1"></div>
-      <div id="leak-2"></div>
-      <div id="wipe-a"></div>
-      <div id="wipe-b"></div>
-      <div id="wipe-c"></div>
-      <div id="flash-overlay"></div>
-      <div id="scanline"></div>
-      <div id="vignette"></div>
+      <!-- ============ SOUND EFFECTS (each has a cause on screen) ============ -->
+      <!-- morning: alarm bells rattle, pillar wipe -->
+      <audio id="sfx-bell-1" class="clip" src="assets/sfx/click.mp3" data-start="0.1" data-duration="0.37" data-track-index="11" data-volume="0.45"></audio>
+      <audio id="sfx-bell-2" class="clip" src="assets/sfx/click.mp3" data-start="0.4" data-duration="0.37" data-track-index="12" data-volume="0.4"></audio>
+      <audio id="sfx-bell-3" class="clip" src="assets/sfx/click.mp3" data-start="0.7" data-duration="0.37" data-track-index="11" data-volume="0.35"></audio>
+      <audio id="sfx-wipe-1" class="clip" src="assets/sfx/whoosh-short.mp3" data-start="4.62" data-duration="0.57" data-track-index="11" data-volume="0.4"></audio>
+      <!-- kitchen: toaster pop, toast lands, tension rises into the zap -->
+      <audio id="sfx-toast-pop" class="clip" src="assets/sfx/pop.mp3" data-start="6.0" data-duration="0.72" data-track-index="11" data-volume="0.55"></audio>
+      <audio id="sfx-toast-land" class="clip" src="assets/sfx/click.mp3" data-start="6.62" data-duration="0.37" data-track-index="12" data-volume="0.3"></audio>
+      <audio id="sfx-riser" class="clip" src="assets/sfx/riser.mp3" data-start="9.0" data-duration="3.0" data-media-start="2.0" data-track-index="13" data-volume="0.35"></audio>
+      <!-- zap: starburst, ring-pull, zap, colour flood, Dad pops up, whip -->
+      <audio id="sfx-burst" class="clip" src="assets/sfx/ping.mp3" data-start="10.9" data-duration="1.32" data-track-index="11" data-volume="0.4"></audio>
+      <audio id="sfx-tab" class="clip" src="assets/sfx/click.mp3" data-start="11.9" data-duration="0.37" data-track-index="12" data-volume="0.55"></audio>
+      <audio id="sfx-zap" class="clip" src="assets/sfx/glitch-1.mp3" data-start="12.0" data-duration="2.64" data-track-index="14" data-volume="0.5"></audio>
+      <audio id="sfx-flood" class="clip" src="assets/sfx/sparkle.mp3" data-start="12.05" data-duration="1.8" data-track-index="13" data-volume="0.4"></audio>
+      <audio id="sfx-boing" class="clip" src="assets/sfx/pop.mp3" data-start="12.95" data-duration="0.72" data-track-index="11" data-volume="0.45"></audio>
+      <audio id="sfx-whip-1" class="clip" src="assets/sfx/whoosh.mp3" data-start="14.15" data-duration="0.57" data-track-index="12" data-volume="0.5"></audio>
+      <!-- rush: toast catch, briefcase, hat, door, car, the line, tilt up -->
+      <audio id="sfx-catch" class="clip" src="assets/sfx/pop.mp3" data-start="15.3" data-duration="0.72" data-track-index="11" data-volume="0.5"></audio>
+      <audio id="sfx-case" class="clip" src="assets/sfx/click.mp3" data-start="16.62" data-duration="0.37" data-track-index="11" data-volume="0.55"></audio>
+      <audio id="sfx-hat" class="clip" src="assets/sfx/pop.mp3" data-start="17.1" data-duration="0.72" data-track-index="12" data-volume="0.4"></audio>
+      <audio id="sfx-door" class="clip" src="assets/sfx/whoosh-short.mp3" data-start="17.38" data-duration="0.57" data-track-index="11" data-volume="0.45"></audio>
+      <audio id="sfx-car" class="clip" src="assets/sfx/whoosh.mp3" data-start="19.0" data-duration="0.57" data-track-index="11" data-volume="0.6"></audio>
+      <audio id="sfx-title" class="clip" src="assets/sfx/chime.mp3" data-start="19.8" data-duration="2.54" data-track-index="13" data-volume="0.4"></audio>
+      <audio id="sfx-tilt" class="clip" src="assets/sfx/whoosh-short.mp3" data-start="21.98" data-duration="0.57" data-track-index="11" data-volume="0.4"></audio>
+      <!-- endcard: the can touches down, the sign-off -->
+      <audio id="sfx-land" class="clip" src="assets/sfx/impact-bass-1.mp3" data-start="23.95" data-duration="2.12" data-track-index="11" data-volume="0.6"></audio>
+      <audio id="sfx-risk" class="clip" src="assets/sfx/ping.mp3" data-start="26.4" data-duration="1.32" data-track-index="11" data-volume="0.35"></audio>
     </div>
-
     <script>
       window.__timelines = window.__timelines || {};
-      var tl = gsap.timeline({ paused: true });
-
-      // SCENE 1: UGHHH (0.00 - 2.20)
-      tl.from("#s1 .mon-label", { opacity: 0, y: -30, duration: 0.4, ease: "power3.out" }, 0.15);
-      tl.from("#s1 .ugh", { opacity: 0, scale: 0.2, rotation: -8, duration: 0.7, ease: "expo.out" }, 0.25);
-      tl.to("#s1 .ugh", { scale: 1.04, duration: 0.2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.2);
-      tl.from("#s1 .yawn", { opacity: 0, x: 200, rotation: -20, duration: 0.5, ease: "back.out(2)" }, 0.9);
-      tl.to("#s1 .yawn", { rotation: -1, duration: 0.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.5);
-
-      // TRANSITION 1: ZOOM THROUGH
-      var T1 = 2.20;
-      tl.to("#s1", { scale: 2.8, opacity: 0, filter: "blur(12px)", duration: 0.3, ease: "power4.in" }, T1);
-      tl.set("#s2", { opacity: 1, zIndex: 2 }, T1 + 0.05);
-      tl.fromTo("#s2",
-        { scale: 0.4, filter: "blur(10px)" },
-        { scale: 1, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, T1 + 0.05);
-
-      // SCENE 2: WEAK COFFEE (2.20 - 4.40)
-      tl.from("#s2 .zzz", { opacity: 0, scale: 0.3, rotation: 60, duration: 0.5, ease: "back.out(2)" }, 2.45);
-      tl.to("#s2 .zzz", { rotation: 18, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, 3.0);
-      tl.from("#s2 .bad-coffee", { opacity: 0, x: -120, duration: 0.5, ease: "expo.out" }, 2.55);
-      tl.to("#s2 .strike", { scaleX: 1, duration: 0.35, ease: "power4.out" }, 3.25);
-      tl.from("#s2 .wake-what", { opacity: 0, y: 60, skewX: -10, duration: 0.5, ease: "power3.out" }, 3.45);
-      tl.to("#s2 .wake-what", { scale: 1.05, duration: 0.12, ease: "power2.inOut", yoyo: true, repeat: 3 }, 3.9);
-
-      // TRANSITION 2: STAGGERED COLOR BLOCKS
-      var T2 = 4.40;
-      tl.set(["#wipe-a", "#wipe-b", "#wipe-c"], { x: -1920 }, T2 - 0.01);
-      tl.to("#wipe-a", { x: 0, duration: 0.18, ease: "power3.inOut" }, T2);
-      tl.to("#wipe-b", { x: 0, duration: 0.18, ease: "power3.inOut" }, T2 + 0.04);
-      tl.to("#wipe-c", { x: 0, duration: 0.18, ease: "power3.inOut" }, T2 + 0.08);
-      tl.set("#s2", { opacity: 0 }, T2 + 0.20);
-      tl.set("#s3", { opacity: 1, zIndex: 2 }, T2 + 0.20);
-      tl.to("#wipe-a", { x: 1920, duration: 0.2, ease: "power3.inOut" }, T2 + 0.24);
-      tl.to("#wipe-b", { x: 1920, duration: 0.2, ease: "power3.inOut" }, T2 + 0.28);
-      tl.to("#wipe-c", { x: 1920, duration: 0.2, ease: "power3.inOut" }, T2 + 0.32);
-
-      // SCENE 3: LIGHTNING INTRO (4.40 - 6.60)
-      tl.from("#s3 .intro-top", { opacity: 0, letterSpacing: "1.5em", duration: 0.5, ease: "power4.out" }, 4.72);
-      tl.fromTo("#s3 .bolt",
-        { scaleY: 0, opacity: 0.2 },
-        { scaleY: 1, opacity: 1, duration: 0.12, ease: "power4.out" }, 5.05);
-      tl.to("#s3 .bolt", { opacity: 0.3, duration: 0.05, yoyo: true, repeat: 5 }, 5.18);
-      tl.from("#s3 .spark", {
-        opacity: 0, scale: 0, duration: 0.3, ease: "back.out(3)", stagger: 0.06
-      }, 5.18);
-      tl.from("#s3 .intro-big", { opacity: 0, scale: 0.3, rotation: -4, duration: 0.6, ease: "expo.out" }, 5.35);
-      tl.to("#s3 .intro-big", { scale: 1.03, duration: 0.15, yoyo: true, repeat: 1, ease: "sine.inOut" }, 5.95);
-
-      // TRANSITION 3: OVEREXPOSURE FLASH
-      var T3 = 6.60;
-      tl.to("#s3", { filter: "brightness(4)", scale: 1.08, duration: 0.14, ease: "power2.in" }, T3);
-      tl.to("#flash-overlay", { opacity: 1, duration: 0.14, ease: "power2.in" }, T3);
-      tl.set("#s3", { opacity: 0, filter: "brightness(1)", scale: 1 }, T3 + 0.18);
-      tl.set("#s4", { opacity: 1, zIndex: 2 }, T3 + 0.18);
-      tl.to("#flash-overlay", { opacity: 0, duration: 0.2, ease: "power2.out" }, T3 + 0.18);
-
-      // SCENE 4: VOLTBEAN SLAM (6.60 - 8.90)
-      tl.from("#s4 .volt-word", { opacity: 0, x: -800, rotation: -6, duration: 0.4, ease: "power4.out" }, 6.82);
-      tl.to("#s4 .volt-word", { rotation: 0, duration: 0.2, ease: "back.out(3)" }, 7.22);
-      tl.from("#s4 .bean-word", { opacity: 0, x: 800, rotation: 6, duration: 0.4, ease: "power4.out" }, 7.12);
-      tl.to("#s4 .bean-word", { rotation: 0, duration: 0.2, ease: "back.out(3)" }, 7.52);
-      tl.from("#s4 .corner-tag", { opacity: 0, scale: 0, rotation: -30, duration: 0.45, ease: "back.out(3.5)" }, 7.7);
-      tl.to("#s4", { backgroundColor: "#FF1F7A", duration: 0.08, yoyo: true, repeat: 3, ease: "steps(1)" }, 8.0);
-      tl.to("#s4", { backgroundColor: "#FFE600", duration: 0.1 }, 8.32);
-
-      // TRANSITION 4: CHROMATIC ABERRATION
-      var T4 = 8.90;
-      tl.set("#glitch-r", { opacity: 0.7, x: 0 }, T4);
-      tl.set("#glitch-b", { opacity: 0.7, x: 0 }, T4);
-      tl.to("#glitch-r", { x: -90, opacity: 0.9, duration: 0.2, ease: "power2.in" }, T4);
-      tl.to("#glitch-b", { x: 90, opacity: 0.9, duration: 0.2, ease: "power2.in" }, T4);
-      tl.to("#s4", { opacity: 0, duration: 0.18, ease: "power2.in" }, T4 + 0.02);
-      tl.set("#s5", { opacity: 1, zIndex: 2 }, T4 + 0.2);
-      tl.to("#glitch-r", { x: 0, opacity: 0, duration: 0.22, ease: "power3.out" }, T4 + 0.2);
-      tl.to("#glitch-b", { x: 0, opacity: 0, duration: 0.22, ease: "power3.out" }, T4 + 0.2);
-
-      // SCENE 5: 1000MG (8.90 - 11.20)
-      tl.from("#s5 .stat-label", { opacity: 0, y: -40, duration: 0.35, ease: "power3.out" }, 9.15);
-      tl.from("#s5 .stat-num", { opacity: 0, scale: 0.5, duration: 0.3, ease: "power3.out" }, 9.25);
-      var counter = { v: 0 };
-      tl.to(counter, {
-        v: 1000, duration: 0.9, ease: "power2.out",
-        onUpdate: function() {
-          var el = document.getElementById("mg-num");
-          if (el) el.textContent = Math.round(counter.v);
-        }
-      }, 9.3);
-      tl.to("#s5 .stat-num", { scale: 1.08, duration: 0.15, yoyo: true, repeat: 1, ease: "power2.inOut" }, 10.25);
-      tl.from("#s5 .stat-unit", { opacity: 0, y: 50, duration: 0.4, ease: "expo.out" }, 10.35);
-      tl.from("#s5 .stat-sub", { opacity: 0, duration: 0.45, ease: "power3.out" }, 10.6);
-
-      // TRANSITION 5: GLITCH SHATTER
-      var T5 = 11.20;
-      tl.set("#glitch-r", { opacity: 1, x: 40, y: -12 }, T5);
-      tl.set("#glitch-g", { opacity: 1, x: -36, y: 14 }, T5);
-      tl.set("#glitch-b", { opacity: 1, x: 18, y: -24 }, T5);
-      tl.to("#s5", { x: 20, duration: 0.04, ease: "none" }, T5);
-      tl.to("#s5", { x: -30, duration: 0.04, ease: "none" }, T5 + 0.04);
-      tl.to("#s5", { x: 15, duration: 0.04, ease: "none" }, T5 + 0.08);
-      tl.to("#s5", { x: 0, opacity: 0, duration: 0.04, ease: "none" }, T5 + 0.12);
-      tl.set("#s6", { opacity: 1, zIndex: 2 }, T5 + 0.16);
-      tl.to(["#glitch-r", "#glitch-g", "#glitch-b"], {
-        opacity: 0, x: 0, y: 0, duration: 0.15, ease: "power2.out"
-      }, T5 + 0.16);
-
-      // SCENE 6: REVIEWS (11.20 - 13.40)
-      tl.from("#s6 .stars", { opacity: 0, scale: 0, rotation: -30, duration: 0.4, ease: "back.out(3)" }, 11.45);
-      tl.from("#s6 .stars span", { opacity: 0, scale: 0, stagger: 0.05, duration: 0.2, ease: "back.out(3)" }, 11.55);
-      tl.from("#s6 .r1", { opacity: 0, x: -200, rotation: -20, duration: 0.35, ease: "back.out(2.5)" }, 11.55);
-      tl.from("#s6 .r2", { opacity: 0, x: 200, rotation: 15, duration: 0.35, ease: "back.out(2.5)" }, 11.85);
-      tl.from("#s6 .r3", { opacity: 0, y: 80, duration: 0.3, ease: "expo.out" }, 12.15);
-      tl.from("#s6 .r4", { opacity: 0, scale: 0.4, rotation: 20, duration: 0.35, ease: "back.out(2.5)" }, 12.45);
-      tl.to("#s6", { x: 8, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 12.85);
-      tl.to("#s6", { x: 0, duration: 0.05 }, 13.15);
-
-      // TRANSITION 6: SQUEEZE
-      var T6 = 13.40;
-      tl.to("#s6", { scaleX: 0, transformOrigin: "left center", duration: 0.2, ease: "power3.inOut" }, T6);
-      tl.set("#s7", { opacity: 1, zIndex: 2, scaleX: 0, transformOrigin: "right center" }, T6 + 0.05);
-      tl.to("#s7", { scaleX: 1, duration: 0.22, ease: "power3.inOut" }, T6 + 0.05);
-
-      // SCENE 7: NOT A DRILL (13.40 - 15.60)
-      tl.from("#s7 .warn-stripe", {
-        scaleY: 0, transformOrigin: "top center",
-        duration: 0.3, ease: "power4.out", stagger: 0.1
-      }, 13.72);
-      tl.from("#s7 .warn-word", { opacity: 0, y: -120, scale: 1.3, duration: 0.45, ease: "power4.out" }, 13.85);
-      tl.from("#s7 .drill", { opacity: 0, y: 120, skewX: -15, duration: 0.45, ease: "back.out(2.5)" }, 14.15);
-      tl.to("#s7", { backgroundColor: "#FFE600", duration: 0.08, ease: "steps(1)" }, 14.65);
-      tl.to("#s7", { backgroundColor: "#FF2233", duration: 0.08, ease: "steps(1)" }, 14.73);
-      tl.to("#s7", { backgroundColor: "#FFE600", duration: 0.08, ease: "steps(1)" }, 14.81);
-      tl.to("#s7", { backgroundColor: "#FF2233", duration: 0.08, ease: "steps(1)" }, 14.89);
-      tl.to("#s7 .drill", { rotation: -2, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 14.8);
-
-      // TRANSITION 7: VERTICAL PUSH
-      var T7 = 15.60;
-      tl.to("#s7", { y: -1080, duration: 0.28, ease: "power4.inOut" }, T7);
-      tl.set("#s8", { opacity: 1, zIndex: 2, y: 1080 }, T7);
-      tl.to("#s8", { y: 0, duration: 0.28, ease: "power4.inOut" }, T7);
-
-      // SCENE 8: FORGED IN THUNDER (15.60 - 18.00)
-      tl.from("#s8 .forged", { opacity: 0, x: -80, duration: 0.4, ease: "power3.out" }, 15.95);
-      tl.from("#s8 .thunder", { opacity: 0, scale: 0.85, duration: 0.4, ease: "power4.out" }, 16.15);
-      tl.fromTo("#s8 .thunder-fill",
-        { clipPath: "inset(100% 0 0 0)" },
-        { clipPath: "inset(0% 0 0 0)", duration: 0.8, ease: "power2.inOut" }, 16.45);
-      tl.to("#s8 .thunder-fill", { opacity: 0.2, duration: 0.05, yoyo: true, repeat: 3 }, 17.3);
-      tl.from("#s8 .runes", { opacity: 0, letterSpacing: "1em", duration: 0.5, ease: "power3.out" }, 17.1);
-
-      // TRANSITION 8: LIGHT LEAK
-      var T8 = 18.00;
-      tl.to("#leak-warm", { opacity: 0.55, duration: 0.2, ease: "power1.in" }, T8);
-      tl.to("#leak-1", { opacity: 0.95, x: 400, duration: 0.3, ease: "sine.inOut" }, T8);
-      tl.to("#leak-2", { opacity: 0.9, x: -300, duration: 0.3, ease: "sine.inOut" }, T8 + 0.05);
-      tl.set("#s8", { opacity: 0 }, T8 + 0.18);
-      tl.set("#s9", { opacity: 1, zIndex: 2 }, T8 + 0.18);
-      tl.to("#leak-warm", { opacity: 0, duration: 0.25, ease: "power2.out" }, T8 + 0.22);
-      tl.to("#leak-1", { opacity: 0, x: 900, duration: 0.25, ease: "power1.out" }, T8 + 0.22);
-      tl.to("#leak-2", { opacity: 0, x: -800, duration: 0.25, ease: "power1.out" }, T8 + 0.22);
-
-      // SCENE 9: 0 -> WIRED (18.00 - 20.30)
-      tl.from("#s9 .speed-line", {
-        scaleX: 0, transformOrigin: "right center",
-        duration: 0.3, ease: "power4.out", stagger: 0.04
-      }, 18.28);
-      tl.from("#s9 .zero-num", { opacity: 0, x: -300, duration: 0.35, ease: "back.out(2)" }, 18.35);
-      tl.from("#s9 .dash", { opacity: 0, scaleX: 0, duration: 0.25, ease: "power4.out" }, 18.7);
-      tl.from("#s9 .wired", { opacity: 0, x: 300, skewX: -20, duration: 0.4, ease: "back.out(2.5)" }, 18.85);
-      tl.from("#s9 .secs", { opacity: 0, y: 50, duration: 0.35, ease: "power3.out" }, 19.3);
-      tl.to("#s9 .speed-line", {
-        x: 120, duration: 0.25, yoyo: true, repeat: 2, ease: "sine.inOut", stagger: 0.03
-      }, 19.4);
-
-      // TRANSITION 9: ZOOM THROUGH TO PRODUCT
-      var T9 = 20.30;
-      tl.to("#s9", { scale: 3, opacity: 0, filter: "blur(14px)", duration: 0.3, ease: "power4.in" }, T9);
-      tl.set("#s10", { opacity: 1, zIndex: 2 }, T9 + 0.05);
-      tl.fromTo("#s10",
-        { scale: 0.3, filter: "blur(14px)" },
-        { scale: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, T9 + 0.05);
-
-      // SCENE 10: CAN HERO (20.30 - 23.30)
-      tl.from("#s10 .can-glow", { opacity: 0, scale: 0.3, duration: 0.6, ease: "power2.out" }, 20.55);
-      tl.to("#s10 .can-glow", {
-        scale: 1.08, opacity: 0.9, duration: 0.6, yoyo: true, repeat: 2, ease: "sine.inOut"
-      }, 21.2);
-      tl.from("#s10 .can-stage", {
-        y: 400, opacity: 0, rotation: -8, duration: 0.7, ease: "back.out(2)"
-      }, 20.6);
-      tl.to("#s10 .can-stage", {
-        y: -20, duration: 1.2, yoyo: true, repeat: 1, ease: "sine.inOut"
-      }, 21.4);
-      tl.from("#s10 .can-label", { opacity: 0, scale: 0.5, duration: 0.35, ease: "back.out(2.5)" }, 21.1);
-      tl.from("#s10 .can-sub", { opacity: 0, y: 20, duration: 0.3, ease: "power3.out" }, 21.3);
-      tl.from("#s10 .can-mg", { opacity: 0, scale: 0.3, duration: 0.35, ease: "back.out(3)" }, 21.45);
-      tl.from("#s10 .can-bolt", { opacity: 0, scale: 0, rotation: 180, duration: 0.35, ease: "back.out(3)" }, 21.6);
-      tl.from("#s10 .taste-tag", { opacity: 0, x: 400, rotation: 40, duration: 0.4, ease: "back.out(2.5)" }, 21.8);
-      tl.from("#s10 .caf-tag", { opacity: 0, x: -400, rotation: -30, duration: 0.4, ease: "back.out(2.5)" }, 21.95);
-      tl.from("#s10 #orbit-bolt-1", { opacity: 0, scale: 0, rotation: -180, duration: 0.35, ease: "back.out(2.5)" }, 22.15);
-      tl.from("#s10 #orbit-bolt-2", { opacity: 0, scale: 0, rotation: 180, duration: 0.35, ease: "back.out(2.5)" }, 22.3);
-      tl.to("#s10 #orbit-bolt-1", { rotation: 20, duration: 0.6, yoyo: true, repeat: 1, ease: "sine.inOut" }, 22.5);
-      tl.to("#s10 #orbit-bolt-2", { rotation: -20, duration: 0.6, yoyo: true, repeat: 1, ease: "sine.inOut" }, 22.5);
-
-      // TRANSITION 10: WHIP PUSH SLIDE
-      var T10 = 23.30;
-      tl.to("#s10", { x: -1920, scale: 0.9, filter: "blur(6px)", duration: 0.25, ease: "power4.inOut" }, T10);
-      tl.set("#s11", { opacity: 1, zIndex: 2, x: 1920 }, T10);
-      tl.to("#s11", { x: 0, duration: 0.25, ease: "power4.inOut" }, T10);
-
-      // SCENE 11: SIDE EFFECTS (23.30 - 25.50)
-      tl.from("#s11 .side-title", { opacity: 0, x: -100, duration: 0.35, ease: "power3.out" }, 23.55);
-      tl.from("#s11 .eff", {
-        opacity: 0, x: -200, skewX: -10, duration: 0.25, ease: "power4.out", stagger: 0.14
-      }, 23.85);
-      tl.from("#s11 .small-print", { opacity: 0, y: 20, duration: 0.35, ease: "power2.out" }, 24.9);
-
-      // TRANSITION 11: ELASTIC PUSH
-      var T11 = 25.50;
-      tl.to("#s11", { x: -1920, duration: 0.3, ease: "power4.in" }, T11);
-      tl.set("#s12", { opacity: 1, zIndex: 2, x: 1920 }, T11);
-      tl.to("#s12", { x: 40, duration: 0.28, ease: "power4.out" }, T11 + 0.05);
-      tl.to("#s12", { x: -20, duration: 0.12, ease: "sine.inOut" }, T11 + 0.33);
-      tl.to("#s12", { x: 0, duration: 0.1, ease: "sine.out" }, T11 + 0.45);
-
-      // SCENE 12: STAMPEDE (25.50 - 27.30)
-      tl.from("#s12 .row.r1", { x: -2800, duration: 0.4, ease: "power3.out" }, 25.75);
-      tl.from("#s12 .row.r2", { x: 2800, duration: 0.4, ease: "power3.out" }, 25.82);
-      tl.from("#s12 .row.r3", { x: -2800, duration: 0.4, ease: "power3.out" }, 25.89);
-      tl.from("#s12 .row.r4", { x: 2800, duration: 0.4, ease: "power3.out" }, 25.96);
-      tl.from("#s12 .row.r5", { x: -2800, duration: 0.4, ease: "power3.out" }, 26.03);
-      tl.to("#s12 .row.r1", { x: "+=160", duration: 1.0, ease: "none" }, 26.3);
-      tl.to("#s12 .row.r2", { x: "-=160", duration: 1.0, ease: "none" }, 26.3);
-      tl.to("#s12 .row.r3", { x: "+=160", duration: 1.0, ease: "none" }, 26.3);
-      tl.to("#s12 .row.r4", { x: "-=160", duration: 1.0, ease: "none" }, 26.3);
-      tl.to("#s12 .row.r5", { x: "+=160", duration: 1.0, ease: "none" }, 26.3);
-
-      // TRANSITION 12: BLUR CROSSFADE
-      var T12 = 27.30;
-      tl.to("#s12", { filter: "blur(14px)", scale: 1.1, opacity: 0, duration: 0.3, ease: "power2.inOut" }, T12);
-      tl.set("#s13", { zIndex: 2 }, T12);
-      tl.fromTo("#s13",
-        { opacity: 0, filter: "blur(14px)", scale: 0.92 },
-        { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.35, ease: "power2.out" }, T12 + 0.05);
-
-      // SCENE 13: FINAL LOCK (27.30 - 30.00)
-      tl.from("#s13 .mini-can", { opacity: 0, x: -400, rotation: -10, duration: 0.5, ease: "back.out(2)" }, 27.65);
-      tl.from("#s13 .mini-label", { opacity: 0, scale: 0.5, duration: 0.35, ease: "back.out(2)" }, 27.9);
-      tl.from("#s13 .final-top", { opacity: 0, duration: 0.5, ease: "power3.out" }, 27.9);
-      tl.from("#s13 .final-brand", { opacity: 0, y: 40, duration: 0.5, ease: "expo.out" }, 28.15);
-      tl.from("#s13 .final-tag", { opacity: 0, x: 80, duration: 0.45, ease: "power3.out" }, 28.5);
-      tl.from("#s13 .legal", { opacity: 0, y: 20, duration: 0.4, ease: "power2.out" }, 28.8);
-      tl.to("#s13 .mini-can", {
-        boxShadow: "0 40px 120px rgba(255, 230, 0, 0.9)",
-        duration: 0.6, yoyo: true, repeat: 1, ease: "sine.inOut"
-      }, 28.5);
-      tl.to("#s13 .final-brand", { scale: 1.04, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, 29.0);
-
+      const tl = gsap.timeline({ paused: true });
       window.__timelines["main"] = tl;
     </script>
   </body>

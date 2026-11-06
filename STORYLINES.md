@@ -39,7 +39,7 @@ A droopy little coffee bean, Beanie, tries to start Monday and fails comically. 
 - **Look:** flat yellow `#FFE600` ground, ink `#0A0A0A` 6 px boiling outlines, pink `#FF1F7A` only on the lightning and the payoff; display type Luckiest Guy (via @font-face), stepped 12 fps animation on characters, smooth 30 fps camera.
 - **Sound:** bouncy swing/big-band bed around 160 bpm with a brass stab when the can cracks; cartoon foley on every action: clock rattle, slide whistle on the melt, *crack-fsssh*, a zap, a cymbal hit on the end card.
 
-## B — "Tomorrow's Morning, Today!"
+## B — "Tomorrow's Morning, Today!" ✅ PICKED (built as v2; see SPEC.md and REVIEW.md)
 
 **Style:** 1950s mid-century modern limited animation (UPA / atomic-age ads): flat cut shapes, no outlines, offset color blocks, starburst graphics, stylized people with tiny legs.
 **Device + form:** life before and after · one continuous sideways pan across a single long set.

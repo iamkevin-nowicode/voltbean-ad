@@ -1,0 +1,274 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #8fa9a3;
+      font-family: "League Gothic", sans-serif;
+    }
+    #k-set {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 3600px;
+      height: 1080px;
+    }
+    #k-set svg { position: absolute; overflow: visible; }
+    .k-ink { fill: none; stroke: #2b2724; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+    .k-title {
+      position: absolute;
+      left: 120px;
+      top: 36px;
+      font-size: 168px;
+      line-height: 1;
+      color: #2b2724;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .k-title b { font-weight: 400; display: inline-block; }
+    /* the Voltbean can: the only full-colour object in the before-world */
+    .k-can {
+      position: absolute;
+      width: 240px;
+      height: 440px;
+      transform-origin: 50% 100%;
+    }
+    .k-can svg { position: absolute; left: 0; top: 0; }
+    .k-can .can-mg {
+      position: absolute; left: 0; right: 0; top: 52px; text-align: center;
+      font-size: 54px; color: #ffe600; letter-spacing: 0.04em;
+    }
+    .k-can .can-name {
+      position: absolute; left: 0; right: 0; top: 250px; text-align: center;
+      font-size: 92px; line-height: 0.82; color: #0a0a0a;
+    }
+    #k-pillar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2200px;
+      height: 1080px;
+      background: #6e5f5a;
+      z-index: 20;
+    }
+    #k-pillar i { position: absolute; top: 0; bottom: 0; width: 90px; background: #8a7a72; }
+  </style>
+
+  <div id="root" data-composition-id="kitchen" data-width="1920" data-height="1080">
+    <div id="k-set" data-layout-allow-overflow>
+      <!-- wall, counter run, checker floor -->
+      <svg width="3600" height="1080" style="left:0;top:0">
+        <defs>
+          <pattern id="k-paper" width="200" height="200" patternUnits="userSpaceOnUse">
+            <rect width="200" height="200" fill="#8fa9a3" />
+            <path d="M30,60 Q60,30 90,60 Q60,48 30,60 Z" fill="#9db5af" />
+            <path d="M130,150 Q160,120 190,150 Q160,138 130,150 Z" fill="#9db5af" />
+          </pattern>
+          <pattern id="k-floor" width="120" height="120" patternUnits="userSpaceOnUse">
+            <rect width="120" height="120" fill="#a89a86" />
+            <rect width="60" height="60" fill="#968874" />
+            <rect x="60" y="60" width="60" height="60" fill="#968874" />
+          </pattern>
+          <pattern id="k-dots" width="70" height="30" patternUnits="userSpaceOnUse">
+            <rect width="70" height="30" fill="#e9e1d3" />
+            <path d="M10,18 Q22,6 34,18" stroke="#c79aa2" stroke-width="4" fill="none" />
+            <circle cx="52" cy="12" r="4" fill="#8fa9a3" />
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="3600" height="1080" fill="url(#k-paper)" />
+        <rect x="0" y="870" width="3600" height="210" fill="url(#k-floor)" />
+        <!-- counter: mustard cabinets, boomerang laminate top -->
+        <rect x="600" y="620" width="3000" height="250" fill="#c9b84a" />
+        <g fill="#b9a93f">
+          <rect x="640" y="660" width="220" height="170" /><rect x="900" y="660" width="220" height="170" />
+          <rect x="1160" y="660" width="220" height="170" /><rect x="1420" y="660" width="220" height="170" />
+          <rect x="1680" y="660" width="220" height="170" /><rect x="1940" y="660" width="220" height="170" />
+          <rect x="2200" y="660" width="220" height="170" /><rect x="2460" y="660" width="220" height="170" />
+          <rect x="2720" y="660" width="220" height="170" /><rect x="2980" y="660" width="220" height="170" />
+          <rect x="3240" y="660" width="220" height="170" />
+        </g>
+        <rect x="580" y="590" width="3020" height="34" fill="url(#k-dots)" />
+        <g transform="translate(-10,-7)">
+          <rect x="580" y="590" width="3020" height="280" class="k-ink" />
+        </g>
+        <line x1="0" y1="872" x2="3600" y2="872" class="k-ink" />
+        <!-- window with café curtains -->
+        <rect x="1780" y="260" width="420" height="280" fill="#e9e1d3" />
+        <circle cx="2100" cy="330" r="44" fill="#d9cfa0" />
+        <rect x="1780" y="260" width="420" height="280" class="k-ink" transform="translate(-10,-7)" />
+        <line x1="1990" y1="254" x2="1990" y2="534" class="k-ink" />
+        <polygon points="1760,250 1880,250 1860,560 1770,560" fill="#c79aa2" />
+        <polygon points="2100,250 2220,250 2210,560 2120,560" fill="#c79aa2" />
+        <!-- upper cabinets -->
+        <rect x="2460" y="250" width="900" height="210" fill="#c9b84a" />
+        <g fill="#b9a93f"><rect x="2490" y="275" width="190" height="160" /><rect x="2710" y="275" width="190" height="160" /><rect x="2930" y="275" width="190" height="160" /><rect x="3150" y="275" width="190" height="160" /></g>
+        <rect x="2460" y="250" width="900" height="210" class="k-ink" transform="translate(-10,-7)" />
+      </svg>
+
+      <!-- the toast (flies onto Dad's head) -->
+      <svg id="k-toast" width="120" height="110" viewBox="0 0 120 110" style="left:950px;top:380px">
+        <path d="M14,40 Q6,6 40,8 Q60,0 80,8 Q114,6 106,40 L104,104 L16,104 Z" fill="#b98f4e" />
+        <path d="M26,44 Q20,20 44,20 Q60,14 76,20 Q100,20 94,44 L92,94 L28,94 Z" fill="#d9b77a" />
+        <path d="M14,40 Q6,6 40,8 Q60,0 80,8 Q114,6 106,40 L104,104 L16,104 Z" class="k-ink" transform="translate(-6,-4)" />
+      </svg>
+
+      <!-- chrome-fin toaster -->
+      <svg width="260" height="200" style="left:880px;top:400px">
+        <rect x="20" y="60" width="220" height="132" rx="40" fill="#b5afa8" />
+        <rect x="40" y="96" width="180" height="16" fill="#9a948d" />
+        <rect x="40" y="128" width="180" height="16" fill="#9a948d" />
+        <rect x="236" y="120" width="22" height="14" fill="#2b2724" />
+        <rect x="20" y="60" width="220" height="132" rx="40" class="k-ink" transform="translate(-10,-7)" />
+        <rect x="70" y="56" width="120" height="10" fill="#2b2724" />
+      </svg>
+      <!-- Dad asleep at the kidney table, head on his hand -->
+      <svg id="k-dad" width="420" height="560" viewBox="0 0 420 560" style="left:1250px;top:330px">
+        <defs>
+          <pattern id="k-stripes" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="#9c8c9a" />
+            <rect width="12" height="30" fill="#b3a5ae" />
+          </pattern>
+        </defs>
+        <g id="k-dad-body">
+          <polygon points="110,250 300,250 272,420 138,420" fill="url(#k-stripes)" />
+          <polygon points="174,250 205,292 236,250" fill="#e9e1d3" />
+          <polygon points="110,250 300,250 272,420 138,420" class="k-ink" transform="translate(-10,-7)" />
+          <!-- propping arm -->
+          <polyline points="120,270 90,350 130,250" class="k-ink" style="stroke-width:9" />
+          <g id="k-dad-head">
+            <path d="M120,70 Q120,14 182,14 Q244,14 244,70 L248,186 Q248,236 188,236 Q124,236 120,186 Z" fill="#d6b49b" />
+            <path d="M124,170 Q184,220 246,170 L248,188 Q246,236 188,236 Q126,236 122,188 Z" fill="#c2a594" />
+            <path d="M116,84 Q110,0 184,0 Q254,0 248,84 Q230,40 184,42 Q136,42 116,84 Z" fill="#4a423d" />
+            <path d="M120,70 Q120,14 182,14 Q244,14 244,70 L248,186 Q248,236 188,236 Q124,236 120,186 Z" class="k-ink" transform="translate(-10,-7)" />
+            <path d="M138,108 Q152,120 166,108" class="k-ink" />
+            <path d="M204,108 Q218,120 232,108" class="k-ink" />
+            <ellipse id="k-dad-snore" cx="190" cy="196" rx="12" ry="7" fill="#6b2e35" />
+            <polygon points="184,106 242,166 182,172" fill="#c79f86" />
+            <polygon points="184,106 242,166 182,172" class="k-ink" style="stroke-width:4" transform="translate(-6,-4)" />
+          </g>
+          <circle cx="130" cy="246" r="18" fill="#d6b49b" />
+        </g>
+        <!-- kidney table in front of him -->
+        <path d="M20,430 Q10,390 90,392 L340,392 Q420,392 404,440 Q392,470 320,462 L110,462 Q30,470 20,430 Z" fill="#c79aa2" />
+        <path d="M20,430 Q10,390 90,392 L340,392 Q420,392 404,440 Q392,470 320,462 L110,462 Q30,470 20,430 Z" class="k-ink" transform="translate(-10,-7)" />
+        <g class="k-ink" style="stroke-width:8"><line x1="90" y1="462" x2="70" y2="560" /><line x1="330" y1="462" x2="350" y2="560" /></g>
+        <!-- his cup of weak coffee -->
+        <rect x="290" y="350" width="50" height="44" fill="#e9e1d3" />
+        <rect x="296" y="352" width="38" height="8" fill="#cdbfa6" />
+      </svg>
+
+      <!-- Mom pouring weak coffee straight past the cup -->
+      <svg id="k-mom" width="420" height="680" viewBox="0 0 420 680" style="left:1940px;top:256px">
+        <!-- the stream and the puddle -->
+        <path id="k-stream" d="M398,204 Q404,300 364,420 Q352,560 360,680" stroke="#b08d62" stroke-width="14" fill="none" stroke-linecap="round" />
+        <ellipse id="k-puddle" cx="360" cy="676" rx="70" ry="12" fill="#b08d62" />
+        <!-- bell skirt -->
+        <polygon points="120,330 240,330 330,600 30,600" fill="#b8647f" />
+        <polygon points="110,340 250,340 270,560 90,560" fill="#e9e1d3" />
+        <polygon points="120,330 240,330 330,600 30,600" class="k-ink" transform="translate(-10,-7)" />
+        <!-- legs + heels -->
+        <g class="k-ink" style="stroke-width:7"><line x1="140" y1="600" x2="136" y2="664" /><line x1="220" y1="600" x2="224" y2="664" /></g>
+        <polygon points="118,664 152,664 150,676 112,676" fill="#2b2724" />
+        <polygon points="210,664 244,664 248,676 210,676" fill="#2b2724" />
+        <!-- bodice -->
+        <polygon points="128,200 232,200 246,334 114,334" fill="#b8647f" />
+        <polygon points="128,200 232,200 246,334 114,334" class="k-ink" transform="translate(-10,-7)" />
+        <!-- pouring arm + percolator -->
+        <g id="k-pour">
+          <polyline points="232,220 290,280 330,240" class="k-ink" style="stroke-width:8" />
+          <rect x="300" y="150" width="70" height="120" rx="12" fill="#b5afa8" />
+          <rect x="324" y="130" width="22" height="24" rx="8" fill="#2b2724" />
+          <polygon points="368,184 404,200 368,214" fill="#b5afa8" />
+          <rect x="300" y="150" width="70" height="120" rx="12" class="k-ink" transform="translate(-8,-5)" />
+        </g>
+        <!-- head: beehive, closed lashes, still asleep -->
+        <rect x="166" y="170" width="28" height="34" fill="#d6b49b" />
+        <ellipse cx="180" cy="120" rx="56" ry="68" fill="#d6b49b" />
+        <path d="M120,96 Q110,-30 184,-24 Q262,-20 240,96 Q224,52 180,54 Q138,54 120,96 Z" fill="#6b5a4a" />
+        <ellipse cx="180" cy="120" rx="56" ry="68" class="k-ink" transform="translate(-10,-7)" />
+        <path d="M148,118 Q160,128 172,118 M190,118 Q202,128 214,118" class="k-ink" />
+        <path d="M146,116 L140,108 M152,120 L148,110 M212,116 L218,108 M206,120 L210,110" class="k-ink" style="stroke-width:3" />
+        <path d="M168,160 Q180,168 192,160" stroke="#a8434f" stroke-width="7" fill="none" stroke-linecap="round" />
+      </svg>
+      <!-- the cup she is missing -->
+      <svg width="80" height="70" style="left:2390px;top:524px">
+        <rect x="10" y="10" width="54" height="56" fill="#e9e1d3" />
+        <path d="M64,24 Q82,24 82,40 Q82,56 64,56" class="k-ink" />
+        <rect x="10" y="10" width="54" height="56" class="k-ink" transform="translate(-6,-4)" />
+      </svg>
+
+      <!-- THE CAN — full colour in a dusty world -->
+      <div id="k-can" class="k-can" style="left:2780px;top:150px;transform:scale(0.66)">
+        <svg width="240" height="440" viewBox="0 0 240 440">
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="#ffe600" />
+          <rect x="0" y="0" width="240" height="40" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="34" width="240" height="96" fill="#0a0a0a" />
+          <polygon points="150,140 70,250 124,250 92,350 182,226 128,226 170,140" fill="#ff1f7a" />
+          <rect x="0" y="404" width="240" height="36" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="none" stroke="#0a0a0a" stroke-width="6" transform="translate(-10,-7)" />
+        </svg>
+        <div class="can-mg" data-layout-ignore>1000 MG</div>
+        <div class="can-name" data-layout-ignore>VOLT<br />BEAN</div>
+      </div>
+    </div>
+
+    <!-- titles: one line at a time, dead still once landed -->
+    <div id="k-title-1" class="k-title clip" data-start="1.7" data-duration="1.5" data-track-index="2">
+      <b>Ordinary</b> <b>coffee.</b>
+    </div>
+    <div id="k-title-2" class="k-title clip" data-start="3.3" data-duration="1.6" data-track-index="2">
+      <b>Ordinary</b> <b>Monday.</b>
+    </div>
+
+    <!-- the doorway pillar carried over from the hall, leaving frame -->
+    <div id="k-pillar" class="clip" data-start="0" data-duration="0.4" data-track-index="3"
+         data-layout-allow-overflow data-layout-allow-occlusion>
+      <i style="left:260px"></i><i style="left:1700px"></i>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+
+      // CAMERA: same truck speed as the hall, then it eases to a stop on the can.
+      tl.fromTo("#k-set", { x: 0 }, { x: -1250, duration: 4.0, ease: "none" }, 0);
+      tl.to("#k-set", { x: -1560, duration: 1.3, ease: "power1.out" }, 4.0);
+
+      // WIPE OUT: the pillar keeps travelling at the same speed it came in with.
+      tl.fromTo("#k-pillar", { x: -120 }, { x: -2300, duration: 0.4, ease: "none" }, 0);
+
+      // TOASTER POPS (t=1.0): up on the anticipation, arc onto sleeping Dad's head.
+      tl.fromTo("#k-toast", { x: 0, y: 70, rotation: 0 },
+        { x: 0, y: -20, duration: 0.12, ease: "power2.out" }, 1.0);
+      tl.to("#k-toast", { x: 470, duration: 0.5, ease: "none" }, 1.12);
+      tl.to("#k-toast", { y: -230, duration: 0.22, ease: "power2.out" }, 1.12);
+      tl.to("#k-toast", { y: -112, duration: 0.28, ease: "power2.in" }, 1.34);
+      tl.to("#k-toast", { rotation: 360, duration: 0.5, ease: "steps(6)" }, 1.12);
+      // lands with a squash on its own 2s, Dad does not wake up
+      tl.to("#k-toast", { scaleY: 0.8, scaleX: 1.12, transformOrigin: "50% 100%", duration: 0.07, ease: "steps(1)" }, 1.62);
+      tl.to("#k-toast", { scaleY: 1, scaleX: 1, duration: 0.07, ease: "steps(1)" }, 1.69);
+
+      // DAD: snoring mouth breathes on 3s
+      tl.fromTo("#k-dad-snore", { attr: { ry: 7 } },
+        { attr: { ry: 14 }, duration: 0.6, ease: "steps(2)", repeat: 6, yoyo: true }, 0);
+
+      // MOM: the pour wobbles on 2s, the puddle grows in three drawings
+      tl.fromTo("#k-pour", { rotation: 0, svgOrigin: "232 220" },
+        { rotation: 4, svgOrigin: "232 220", duration: 0.2, ease: "steps(1)", repeat: 15, yoyo: true }, 1.6);
+      tl.fromTo("#k-puddle", { attr: { rx: 40 } }, { attr: { rx: 150 }, duration: 3.0, ease: "steps(5)" }, 1.8);
+
+      // TITLES: words drop in 3 frames apart, land dead still, leave on a blur.
+      tl.fromTo("#k-title-1 b", { opacity: 0, y: -40 },
+        { opacity: 1, y: 0, duration: 0.22, ease: "expo.out", stagger: 0.1 }, 1.72);
+      tl.to("#k-title-1", { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, 3.0);
+      tl.fromTo("#k-title-2 b", { opacity: 0, y: -40 },
+        { opacity: 1, y: 0, duration: 0.22, ease: "expo.out", stagger: 0.1 }, 3.32);
+      tl.to("#k-title-2", { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, 4.7);
+
+      window.__timelines["kitchen"] = tl;
+    })();
+  </script>
+</template>

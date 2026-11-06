@@ -1,0 +1,214 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #ffe600;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    #e-world { position: absolute; inset: 0; }
+    #e-world svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    .e-ink { fill: none; stroke: #0a0a0a; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+    #e-can-wrap {
+      position: absolute;
+      left: 190px;
+      top: 296px;
+      width: 336px;
+      height: 760px;
+    }
+    #e-can {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 240px;
+      height: 440px;
+    }
+    #e-can svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    #e-can .can-mg {
+      position: absolute; left: 0; right: 0; top: 52px; text-align: center;
+      font-size: 54px; color: #ffe600; letter-spacing: 0.04em;
+    }
+    #e-can .can-name {
+      position: absolute; left: 0; right: 0; top: 250px; text-align: center;
+      font-size: 92px; line-height: 0.82; color: #0a0a0a;
+    }
+    #e-wordmark {
+      position: absolute;
+      left: 640px;
+      top: 70px;
+      font-size: 330px;
+      line-height: 1;
+      color: #0a0a0a;
+      letter-spacing: 0.01em;
+    }
+    .e-claim {
+      position: absolute;
+      left: 650px;
+      font-size: 132px;
+      line-height: 1;
+      color: #0a0a0a;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #e-claim-1 { top: 400px; }
+    #e-claim-2 { top: 530px; }
+    #e-claim-2 em { font-style: normal; color: #fafafa; background: #ff1f7a; padding: 0 14px; margin-left: 4px; box-shadow: -10px -7px 0 #0a0a0a; }
+    #e-risk {
+      position: absolute;
+      left: 660px;
+      top: 670px;
+      font-family: "Yellowtail", cursive;
+      font-size: 104px;
+      line-height: 1.25;
+      color: #0a0a0a;
+      white-space: nowrap;
+    }
+    #e-legal {
+      position: absolute;
+      left: 640px;
+      top: 1000px;
+      font-size: 34px;
+      letter-spacing: 0.05em;
+      color: #fafafa;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080"
+       data-composition-variables='[
+         {"id":"claim-1","type":"string","label":"Claim, line 1","default":"Coffee is dead."},
+         {"id":"claim-2","type":"string","label":"Claim, line 2","default":"Long live"},
+         {"id":"claim-accent","type":"string","label":"Claim, pink word","default":"voltage."},
+         {"id":"risk","type":"string","label":"Sign-off","default":"Drink at your own risk."},
+         {"id":"legal","type":"string","label":"Small print","default":"1000 MG CAFFEINE PER CAN · NOT APPROVED BY ANYONE, REALLY · © VOLTBEAN"}
+       ]'>
+    <!-- the rooftop world: rises into view as the camera settles back down from the sky -->
+    <div id="e-world" data-layout-allow-overflow>
+      <svg width="1920" height="1080">
+        <defs>
+          <pattern id="e-sky" width="180" height="180" patternUnits="userSpaceOnUse">
+            <rect width="180" height="180" fill="#ffe600" />
+            <polygon points="45,25 51,39 65,45 51,51 45,65 39,51 25,45 39,39" fill="#fff27a" />
+            <polygon points="135,115 139,125 149,129 139,133 135,143 131,133 121,129 131,125" fill="#fff27a" />
+          </pattern>
+        </defs>
+        <rect width="1920" height="1080" fill="url(#e-sky)" />
+        <!-- the atomic sun, haloing the can -->
+        <polygon transform="translate(110,60) scale(0.72)" points="300,0 358,83 450,40 459,141 560,150 517,242 600,300 517,358 560,450 459,459 450,560 358,517 300,600 242,517 150,560 141,459 40,450 83,358 0,300 83,242 40,150 141,141 150,40 242,83" fill="#ff1f7a" />
+        <!-- distant skyline: low behind the copy, tall behind the can -->
+        <g>
+          <rect x="0" y="560" width="160" height="380" fill="#1fb5a8" />
+          <rect x="130" y="660" width="200" height="280" fill="#ff1f7a" />
+          <rect x="460" y="620" width="170" height="320" fill="#fafafa" />
+          <rect x="620" y="820" width="260" height="120" fill="#1fb5a8" />
+          <rect x="860" y="850" width="200" height="90" fill="#ff1f7a" />
+          <rect x="1040" y="810" width="240" height="130" fill="#fafafa" />
+          <rect x="1270" y="840" width="230" height="100" fill="#1fb5a8" />
+          <rect x="1490" y="800" width="160" height="140" fill="#ff1f7a" />
+          <!-- the atomic tower -->
+          <rect x="1680" y="520" width="150" height="420" fill="#1fb5a8" />
+          <rect x="1700" y="560" width="30" height="30" fill="#fafafa" /><rect x="1780" y="560" width="30" height="30" fill="#fafafa" />
+          <rect x="1700" y="640" width="30" height="30" fill="#fafafa" /><rect x="1780" y="640" width="30" height="30" fill="#fafafa" />
+          <rect x="1700" y="720" width="30" height="30" fill="#fafafa" /><rect x="1780" y="720" width="30" height="30" fill="#fafafa" />
+          <line x1="1755" y1="520" x2="1755" y2="470" class="e-ink" />
+        </g>
+        <g id="e-atom">
+          <ellipse cx="1755" cy="410" rx="90" ry="30" class="e-ink" />
+          <ellipse cx="1755" cy="410" rx="90" ry="30" class="e-ink" transform="rotate(60 1755 410)" />
+          <ellipse cx="1755" cy="410" rx="90" ry="30" class="e-ink" transform="rotate(-60 1755 410)" />
+          <circle cx="1755" cy="410" r="18" fill="#ff1f7a" />
+        </g>
+        <!-- windows -->
+        <g fill="#0a0a0a" opacity="0.85">
+          <rect x="30" y="600" width="26" height="26" /><rect x="90" y="600" width="26" height="26" />
+          <rect x="30" y="680" width="26" height="26" /><rect x="90" y="680" width="26" height="26" />
+          <rect x="490" y="660" width="24" height="24" /><rect x="560" y="660" width="24" height="24" />
+          <rect x="490" y="730" width="24" height="24" /><rect x="560" y="730" width="24" height="24" />
+        </g>
+        <!-- rooftop parapet the can lands on -->
+        <rect x="0" y="930" width="1920" height="1100" fill="#0a0a0a" />
+        <rect x="0" y="930" width="1920" height="16" fill="#ff1f7a" />
+      </svg>
+    </div>
+
+    <!-- the can comes down like an atomic-age rocket, retro-flames first -->
+    <div id="e-can-wrap" class="clip" data-start="0.7" data-duration="6.8" data-track-index="2" data-layout-allow-overflow>
+      <svg width="336" height="760" style="position:absolute;left:0;top:0;overflow:visible">
+        <g id="e-flames">
+          <polygon points="60,620 168,820 276,620" fill="#ff1f7a" />
+          <polygon points="100,620 168,760 236,620" fill="#fafafa" />
+        </g>
+      </svg>
+      <div id="e-can">
+        <svg width="240" height="440" viewBox="0 0 240 440">
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="#ffe600" />
+          <rect x="0" y="0" width="240" height="40" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="34" width="240" height="96" fill="#0a0a0a" />
+          <polygon points="150,140 70,250 124,250 92,350 182,226 128,226 170,140" fill="#ff1f7a" />
+          <rect x="0" y="404" width="240" height="36" rx="14" fill="#c9c4bd" />
+          <rect x="0" y="0" width="240" height="440" rx="26" fill="none" stroke="#0a0a0a" stroke-width="6" transform="translate(-10,-7)" />
+          <!-- rocket fins -->
+          <polygon points="0,330 -60,450 0,420" fill="#ff1f7a" />
+          <polygon points="240,330 300,450 240,420" fill="#ff1f7a" />
+        </svg>
+        <div class="can-mg">1000 MG</div>
+        <div class="can-name">VOLT<br />BEAN</div>
+      </div>
+    </div>
+
+    <!-- the mark + the claim -->
+    <div id="e-wordmark" class="clip" data-start="1.85" data-duration="5.65" data-track-index="3">VOLTBEAN</div>
+    <div id="e-claim-1" class="e-claim clip" data-start="2.5" data-duration="5" data-track-index="4"
+         data-var-text="claim-1">Coffee is dead.</div>
+    <div id="e-claim-2" class="e-claim clip" data-start="2.95" data-duration="4.55" data-track-index="4"><span data-var-text="claim-2">Long live</span> <em data-var-text="claim-accent">voltage.</em></div>
+    <div id="e-risk" class="clip" data-start="3.85" data-duration="3.65" data-track-index="5"
+         data-var-text="risk">Drink at your own risk.</div>
+    <div id="e-legal" class="clip" data-start="4.4" data-duration="3.1" data-track-index="6"
+         data-var-text="legal">1000 MG CAFFEINE PER CAN · NOT APPROVED BY ANYONE, REALLY · © VOLTBEAN</div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+
+      tl.set("#e-can", { scale: 1.4, transformOrigin: "0% 0%" }, 0);
+
+      // TILT SETTLES: after looking up at the sky, the camera settles back down onto the rooftop
+      tl.fromTo("#e-world", { y: 900 }, { y: 0, duration: 0.75, ease: "expo.out" }, 0);
+
+      // ROCKET LANDING: the can falls from the sky on retro-flames, brakes, touches down (1.45)
+      tl.fromTo("#e-can-wrap", { y: -1100 }, { y: -60, duration: 0.55, ease: "power2.in" }, 0.7);
+      tl.to("#e-can-wrap", { y: 0, duration: 0.2, ease: "power1.out" }, 1.25);
+      tl.fromTo("#e-flames", { scaleY: 1, svgOrigin: "168 620" },
+        { scaleY: 0.6, svgOrigin: "168 620", duration: 0.067, ease: "steps(1)", repeat: 9, yoyo: true }, 0.7);
+      tl.to("#e-flames", { scaleY: 0, svgOrigin: "168 620", duration: 0.13, ease: "steps(2)" }, 1.4);
+      // touchdown squash and settle (a take, on 2s)
+      tl.fromTo("#e-can", { scaleX: 1.4, scaleY: 1.4, transformOrigin: "0% 0%" },
+        { scaleX: 1.52, scaleY: 1.28, y: 52, x: -14, duration: 0.067, ease: "steps(1)" }, 1.45);
+      tl.to("#e-can", { scaleX: 1.4, scaleY: 1.4, y: 0, x: 0, duration: 0.13, ease: "steps(2)" }, 1.52);
+      // the atom on the tower spins once, mechanical (linear is the point)
+      tl.fromTo("#e-atom", { rotation: 0, svgOrigin: "1755 410" },
+        { rotation: 360, svgOrigin: "1755 410", duration: 6.0, ease: "none" }, 1.45);
+
+      // THE MARK: wiped in left to right like a sign being painted
+      tl.fromTo("#e-wordmark", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.35, ease: "power2.inOut" }, 1.85);
+
+      // THE CLAIM: words stamp in a beat apart, then hold dead still
+      tl.fromTo("#e-claim-1", { opacity: 0, scale: 1.18, transformOrigin: "0% 50%" },
+        { opacity: 1, scale: 1, duration: 0.18, ease: "back.out(2)" }, 2.5);
+      tl.fromTo("#e-claim-2", { opacity: 0, scale: 1.18, transformOrigin: "0% 50%" },
+        { opacity: 1, scale: 1, duration: 0.18, ease: "back.out(2)" }, 2.95);
+      tl.fromTo("#e-risk", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.45, ease: "power1.inOut" }, 3.85);
+      tl.fromTo("#e-legal", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 4.4);
+
+      window.__timelines["endcard"] = tl;
+    })();
+  </script>
+</template>
