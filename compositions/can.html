@@ -1,0 +1,143 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #8fa9a3;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    #n-full { position: absolute; inset: 0; background: #ffe600; clip-path: circle(0px at 660px 380px); }
+    #n-zoom { position: absolute; inset: 0; }
+    #n-art { position: absolute; left: 0; top: 0; overflow: visible; }
+    #n-burst { position: absolute; left: 1160px; top: 120px; width: 600px; height: 600px; }
+    #n-burst svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    #n-burst .mg {
+      position: absolute; left: 0; right: 0; top: 170px; text-align: center;
+      font-size: 200px; line-height: 1; color: #fafafa;
+    }
+    #n-burst .sub {
+      position: absolute; left: 0; right: 0; top: 380px; text-align: center;
+      font-size: 48px; letter-spacing: 0.08em; color: #fafafa;
+    }
+    #n-script {
+      position: absolute;
+      left: 1110px;
+      top: 770px;
+      font-family: "Yellowtail", cursive;
+      font-size: 100px;
+      line-height: 1.25;
+      color: #0a0a0a;
+      white-space: nowrap;
+    }
+    #n-iris { position: absolute; inset: 0; background: #ff1f7a; clip-path: circle(0px at 685px 596px); }
+  </style>
+
+  <div id="root" data-composition-id="can" data-width="1920" data-height="1080">
+    <!-- the world turns Voltbean through an iris opened by the ring-pull -->
+    <div id="n-full"></div>
+
+    <div id="n-zoom">
+      <svg id="n-art" width="1920" height="1080" data-layout-allow-overflow>
+        <!-- the bolt that escapes the can -->
+        <g id="n-bolt" opacity="0">
+          <polygon points="700,390 610,160 670,152 600,-120 780,190 712,196 768,390" fill="#ff1f7a" />
+          <polygon points="700,390 610,160 670,152 600,-120 780,190 712,196 768,390" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" transform="translate(-12,-9)" />
+        </g>
+
+        <g id="n-stage">
+          <!-- SIDE VIEW body: grows down from under the lid as the can turns to face us -->
+          <g id="n-body">
+            <ellipse cx="660" cy="1560" rx="300" ry="54" fill="#c9c4bd" />
+            <rect x="360" y="560" width="600" height="1000" fill="#ffe600" />
+            <rect x="360" y="650" width="600" height="190" fill="#0a0a0a" />
+            <text x="660" y="795" text-anchor="middle" font-family="League Gothic" font-size="140" fill="#ffe600" letter-spacing="6">1000 MG</text>
+            <polygon id="n-label-bolt" points="740,880 540,1210 680,1210 590,1480 860,1090 720,1090 820,880" fill="#ff1f7a" />
+            <text x="660" y="1225" text-anchor="middle" font-family="League Gothic" font-size="300" fill="#0a0a0a">VOLT</text>
+            <text x="660" y="1500" text-anchor="middle" font-family="League Gothic" font-size="300" fill="#0a0a0a">BEAN</text>
+            <rect x="404" y="560" width="34" height="1000" fill="#fafafa" opacity="0.35" />
+            <path d="M360,560 L360,1560 A300,54 0 0 0 960,1560 L960,560" fill="none" stroke="#0a0a0a" stroke-width="12" transform="translate(-16,-11)" />
+          </g>
+
+          <!-- TOP VIEW lid: it squashes into the can's top ellipse during the turn -->
+          <g id="n-top">
+            <circle cx="660" cy="560" r="300" fill="#c9c4bd" />
+            <circle cx="660" cy="560" r="278" fill="none" stroke="#aaa49d" stroke-width="18" />
+            <circle cx="660" cy="560" r="258" fill="#bdb7b0" />
+            <path id="n-score" d="M660,330 C726,330 744,392 704,424 L616,424 C576,392 594,330 660,330 Z" fill="none" stroke="#a39d96" stroke-width="6" />
+            <path id="n-open" opacity="0" d="M660,330 C726,330 744,392 704,424 L616,424 C576,392 594,330 660,330 Z" fill="#2b2724" />
+            <g id="n-tab">
+              <rect x="604" y="438" width="112" height="178" rx="52" fill="#a9a39c" />
+              <rect x="632" y="526" width="56" height="64" rx="26" fill="#bdb7b0" />
+            </g>
+            <circle cx="660" cy="560" r="300" fill="none" stroke="#2b2724" stroke-width="10" transform="translate(-12,-9)" />
+          </g>
+          <!-- the ink dot from the drained cup becomes the rivet -->
+          <circle id="n-rivet" cx="660" cy="470" r="14" fill="#2b2724" transform="translate(0,90)" />
+        </g>
+      </svg>
+
+      <div id="n-burst" class="clip" data-start="2.55" data-duration="1.95" data-track-index="2">
+        <svg width="600" height="600" viewBox="0 0 600 600">
+          <polygon points="300,0 358,83 450,40 459,141 560,150 517,242 600,300 517,358 560,450 459,459 450,560 358,517 300,600 242,517 150,560 141,459 40,450 83,358 0,300 83,242 40,150 141,141 150,40 242,83" fill="#ff1f7a" />
+          <polygon points="300,0 358,83 450,40 459,141 560,150 517,242 600,300 517,358 560,450 459,459 450,560 358,517 300,600 242,517 150,560 141,459 40,450 83,358 0,300 83,242 40,150 141,141 150,40 242,83" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linejoin="round" transform="translate(-12,-9)" />
+        </svg>
+        <div class="mg">1000 MG!</div>
+        <div class="sub">CAFFEINE PER CAN</div>
+      </div>
+      <div id="n-script" class="clip" data-start="3.0" data-duration="1.5" data-track-index="2">Electrified cold brew.</div>
+    </div>
+
+    <!-- zoom-through: the label's bolt fills the frame with pink -->
+    <div id="n-iris" class="clip" data-start="4.7" data-duration="0.8" data-track-index="3"></div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const C = "660 560";
+
+      // start: only the ink dot on teal (where the cup drained to)
+
+      // the LID grows out of the dot; the dot settles in as its rivet
+      tl.fromTo("#n-top", { scale: 0.047, svgOrigin: C }, { scale: 1, svgOrigin: C, duration: 0.55, ease: "expo.out" }, 0.05);
+      tl.fromTo("#n-rivet", { y: 90, attr: { r: 14, fill: "#2b2724" } }, { y: 0, attr: { r: 20, fill: "#8f8a84" }, duration: 0.45, ease: "expo.out" }, 0.08);
+
+      // RING-PULL: the tail lifts toward us (foreshortens), the score breaks open
+      tl.fromTo("#n-tab", { scaleY: 1, svgOrigin: "660 470" }, { scaleY: 0.3, svgOrigin: "660 470", duration: 0.12, ease: "power2.out" }, 0.9);
+      tl.set("#n-open", { opacity: 1 }, 0.98);
+      tl.fromTo("#n-open", { scale: 0.6, svgOrigin: "660 380" }, { scale: 1, svgOrigin: "660 380", duration: 0.12, ease: "back.out(3)" }, 0.98);
+
+      // THE BOLT leaves through the opening
+      tl.set("#n-bolt", { opacity: 1 }, 1.0);
+      tl.fromTo("#n-bolt", { scaleY: 0, svgOrigin: "700 390" }, { scaleY: 1, svgOrigin: "700 390", duration: 0.12, ease: "power4.out" }, 1.0);
+
+      // COLOUR FLOOD from the opening
+      tl.to("#n-full", { clipPath: "circle(2300px at 660px 380px)", duration: 0.55, ease: "power2.in" }, 1.05);
+      tl.to("#n-bolt", { scaleY: 0, svgOrigin: "700 -120", duration: 0.18, ease: "power3.in" }, 1.45);
+
+      // THE TURN: the lid flattens into an ellipse while the body unrolls below it
+      tl.to("#n-top", { scaleY: 0.18, svgOrigin: C, duration: 0.8, ease: "power3.inOut" }, 1.7);
+      tl.to("#n-rivet", { scaleY: 0.18, svgOrigin: C, duration: 0.8, ease: "power3.inOut" }, 1.7);
+      tl.fromTo("#n-body", { scaleY: 0, svgOrigin: C }, { scaleY: 1, svgOrigin: C, duration: 0.8, ease: "power3.inOut" }, 1.7);
+      tl.fromTo("#n-stage", { scale: 1, y: 0, svgOrigin: C }, { scale: 0.62, y: -330, svgOrigin: C, duration: 0.8, ease: "power3.inOut" }, 1.7);
+
+      // the claim: starburst stamps in, then the script is brushed on; both hold dead still
+      tl.fromTo("#n-burst", { scale: 0.2, rotation: -25, transformOrigin: "50% 50%" },
+        { scale: 1, rotation: 0, duration: 0.32, ease: "back.out(2)" }, 2.55);
+      tl.fromTo("#n-script", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.5, ease: "power1.inOut" }, 3.0);
+
+      // ZOOM THROUGH THE LABEL'S BOLT into the next world
+      tl.to(["#n-burst", "#n-script"], { opacity: 0, filter: "blur(10px)", duration: 0.16, ease: "power2.in", stagger: 0.05 }, 4.35);
+      tl.to("#n-zoom", { scale: 5, transformOrigin: "685px 596px", duration: 0.6, ease: "power3.in" }, 4.5);
+      tl.to("#n-iris", { clipPath: "circle(2300px at 685px 596px)", duration: 0.4, ease: "power3.in" }, 4.72);
+
+      window.__timelines["can"] = tl;
+    })();
+  </script>
+</template>

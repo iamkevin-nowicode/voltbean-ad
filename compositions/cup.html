@@ -1,0 +1,100 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #8fa9a3;
+      font-family: "League Gothic", sans-serif;
+    }
+    #u-art { position: absolute; left: 0; top: 0; overflow: visible; }
+    .u-type {
+      position: absolute;
+      left: 1180px;
+      color: #2b2724;
+      font-size: 200px;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #u-l1 { top: 250px; }
+    /* the slot-machine window for the second word */
+    #u-l2 { top: 450px; height: 200px; overflow: hidden; }
+    #u-l2 span { display: block; height: 200px; }
+  </style>
+
+  <div id="root" data-composition-id="cup" data-width="1920" data-height="1080">
+    <!-- a cup of weak coffee, seen from above: the clock face has become its rim -->
+    <svg id="u-art" width="1920" height="1080" data-layout-allow-overflow>
+      <g id="u-saucer" opacity="0">
+        <circle cx="660" cy="560" r="440" fill="#ddd3c3" />
+        <circle cx="660" cy="560" r="440" fill="none" stroke="#2b2724" stroke-width="8" transform="translate(-12,-9)" />
+        <circle cx="660" cy="560" r="360" fill="none" stroke="#cfc4b2" stroke-width="10" />
+      </g>
+      <g id="u-handle" opacity="0">
+        <rect x="940" y="510" width="200" height="100" rx="50" fill="#e9e1d3" />
+        <rect x="1010" y="538" width="96" height="44" rx="22" fill="#ddd3c3" />
+        <rect x="940" y="510" width="200" height="100" rx="50" fill="none" stroke="#2b2724" stroke-width="8" transform="translate(-12,-9)" />
+      </g>
+      <g id="u-cup">
+        <circle id="u-rim" cx="660" cy="560" r="330" fill="#e9e1d3" />
+        <circle cx="660" cy="560" r="330" fill="none" stroke="#2b2724" stroke-width="8" transform="translate(-12,-9)" />
+        <circle id="u-wall" opacity="0" cx="660" cy="560" r="300" fill="#d8cdbb" />
+      </g>
+      <!-- the coffee: pale, weak, barely brown -->
+      <circle id="u-coffee" opacity="0" cx="660" cy="560" r="270" fill="#c4ad86" />
+      <circle id="u-ripple-1" opacity="0" cx="660" cy="560" r="40" fill="none" stroke="#d9c7a4" stroke-width="5" />
+      <circle id="u-ripple-2" opacity="0" cx="660" cy="560" r="40" fill="none" stroke="#d9c7a4" stroke-width="5" />
+      <circle id="u-glint" opacity="0" cx="560" cy="440" r="26" fill="#e3d6bd" />
+    </svg>
+
+    <div id="u-l1" class="u-type clip" data-start="0.7" data-duration="3.55" data-track-index="2">Ordinary</div>
+    <div id="u-l2" class="u-type clip" data-start="0.82" data-duration="3.43" data-track-index="2">
+      <span id="u-w1">Coffee.</span>
+      <span id="u-w2">Monday.</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const C = "660 560";
+
+      // frame 0 matches the clock's last frame: one paper circle on teal.
+
+      // the saucer slides out from under the rim, the handle follows, the coffee pours in
+      tl.set(["#u-saucer", "#u-handle", "#u-wall"], { opacity: 1 }, 0.08);
+      tl.fromTo("#u-saucer", { scale: 0.75, svgOrigin: C }, { scale: 1, svgOrigin: C, duration: 0.6, ease: "expo.out" }, 0.08);
+      tl.fromTo("#u-handle", { x: -200 }, { x: 0, duration: 0.5, ease: "expo.out" }, 0.2);
+      tl.fromTo("#u-wall", { scale: 0, svgOrigin: C }, { scale: 1, svgOrigin: C, duration: 0.45, ease: "expo.out" }, 0.12);
+      tl.set(["#u-coffee"], { opacity: 1 }, 0.25);
+      tl.fromTo("#u-coffee", { scale: 0, svgOrigin: C }, { scale: 1, svgOrigin: C, duration: 0.7, ease: "power3.out" }, 0.25);
+      tl.set("#u-glint", { opacity: 1 }, 0.7);
+      tl.fromTo("#u-glint", { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.25, ease: "back.out(2)" }, 0.7);
+
+      // two slow, sad ripples cross the weak coffee
+      [["#u-ripple-1", 1.1], ["#u-ripple-2", 1.8]].forEach(([sel, t]) => {
+        tl.set(sel, { opacity: 1 }, t);
+        tl.fromTo(sel, { attr: { r: 30 } }, { attr: { r: 262 }, duration: 1.6, ease: "power1.out" }, t);
+        tl.to(sel, { opacity: 0, duration: 1.6, ease: "power1.in" }, t);
+      });
+
+      // type: "ORDINARY" blurs in, "COFFEE." follows a beat later
+      tl.fromTo("#u-l1", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0.7);
+      tl.fromTo("#u-w1", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0.82);
+      // the slot machine: "COFFEE." rolls up and out, "MONDAY." rolls in under it
+      tl.fromTo(["#u-w1", "#u-w2"], { y: 0 }, { y: -200, duration: 0.32, ease: "power3.inOut" }, 2.45);
+
+      // EXIT: the type leaves, then the cup drains to a single dot of ink
+      tl.to(["#u-l1", "#u-l2"], { opacity: 0, filter: "blur(10px)", duration: 0.18, ease: "power2.in", stagger: 0.06 }, 4.05);
+      tl.to("#u-handle", { x: -220, opacity: 0, duration: 0.3, ease: "power3.in" }, 4.1);
+      tl.to("#u-saucer", { scale: 0.7, opacity: 0, svgOrigin: C, duration: 0.32, ease: "power3.in" }, 4.15);
+      tl.to("#u-glint", { scale: 0, duration: 0.15, ease: "power2.in" }, 4.15);
+      tl.to("#u-coffee", { attr: { fill: "#2b2724" }, duration: 0.3, ease: "power1.in" }, 4.25);
+      tl.to("#u-coffee", { scale: 14 / 270, svgOrigin: C, duration: 0.45, ease: "power3.in" }, 4.3);
+      tl.to("#u-cup", { scale: 0, svgOrigin: C, duration: 0.42, ease: "power3.in" }, 4.33);
+
+      window.__timelines["cup"] = tl;
+    })();
+  </script>
+</template>

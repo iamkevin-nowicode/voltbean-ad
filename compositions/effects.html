@@ -1,0 +1,149 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #ff1f7a;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    .f-panel { position: absolute; inset: 0; overflow: hidden; }
+    .f-panel svg { position: absolute; left: 0; top: 0; overflow: visible; }
+    .f-big { position: absolute; left: 120px; line-height: 1; text-transform: uppercase; white-space: nowrap; }
+    /* A — the inbox */
+    #f-a { background: #ff1f7a; }
+    #f-head { position: absolute; left: 124px; top: 110px; font-size: 64px; letter-spacing: 0.08em; color: #fafafa; }
+    #f-inbox { top: 300px; font-size: 300px; color: #fafafa; }
+    #f-count { display: inline-block; color: #ffe600; min-width: 200px; transform-origin: 0% 60%; }
+    /* B — the calendar */
+    #f-b { background: #fafafa; }
+    .f-cal-h { font-family: "League Gothic"; font-size: 64px; fill: #0a0a0a; }
+    .f-cal-d { font-family: "League Gothic"; font-size: 46px; fill: #0a0a0a; }
+    .f-hline, .f-vline { fill: #0a0a0a; }
+    #f-monday { left: 1210px; top: 270px; font-size: 230px; color: #0a0a0a; }
+    #f-handled { left: 1210px; top: 500px; font-size: 230px; color: #ff1f7a; }
+    /* C — the heartbeat */
+    #f-c { background: #ffe600; }
+    #f-heart { top: 110px; font-size: 220px; color: #0a0a0a; }
+    #f-surround { top: 330px; font-size: 220px; color: #0a0a0a; }
+    /* D — the line */
+    #f-d { background: #1fb5a8; }
+    #f-banner { position: absolute; left: 180px; top: 370px; width: 1560px; height: 330px; }
+    #f-banner .line {
+      position: absolute; left: 0; right: 0; top: 64px; text-align: center;
+      font-family: "Yellowtail", cursive; font-size: 134px; line-height: 1.25;
+      color: #fafafa; white-space: nowrap;
+    }
+  </style>
+
+  <div id="root" data-composition-id="effects" data-width="1920" data-height="1080">
+
+    <!-- ================= A · INBOX: 0 ================= -->
+    <div id="f-a-clip" class="f-panel clip" data-start="0" data-duration="2.2" data-track-index="1" data-layout-allow-overflow>
+      <div id="f-a" class="f-panel">
+      <svg id="f-envs" width="1920" height="1080" style="left:1260px;top:300px">
+        <g class="f-env"><g transform="translate(-84,108)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(-70,90)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(-56,72)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(-42,54)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(-28,36)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(-14,18)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g><g class="f-env"><g transform="translate(0,0)"><rect x="0" y="0" width="420" height="270" fill="#fafafa" /><polyline points="0,0 210,150 420,0" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" /><rect x="0" y="0" width="420" height="270" fill="none" stroke="#0a0a0a" stroke-width="8" transform="translate(-10,-7)" /></g></g>
+      </svg>
+      <div id="f-head">SIDE EFFECTS MAY INCLUDE:</div>
+      <div id="f-inbox" class="f-big">Inbox: <span id="f-count">247</span></div>
+      </div>
+    </div>
+
+    <!-- ================= B · MONDAY: HANDLED. ================= -->
+    <div id="f-b-clip" class="f-panel clip" data-start="2.0" data-duration="2.3" data-track-index="2" data-layout-allow-overflow>
+      <div id="f-b" class="f-panel">
+      <svg width="1920" height="1080">
+        <g id="f-cal"><text class="f-cal-h" x="190.0" y="222" text-anchor="middle">M</text><text class="f-cal-h" x="330.0" y="222" text-anchor="middle">T</text><text class="f-cal-h" x="470.0" y="222" text-anchor="middle">W</text><text class="f-cal-h" x="610.0" y="222" text-anchor="middle">T</text><text class="f-cal-h" x="750.0" y="222" text-anchor="middle">F</text><text class="f-cal-h" x="890.0" y="222" text-anchor="middle">S</text><text class="f-cal-h" x="1030.0" y="222" text-anchor="middle">S</text><rect class="f-hline" x="120" y="248" width="980" height="4" /><rect class="f-hline" x="120" y="376" width="980" height="4" /><rect class="f-hline" x="120" y="504" width="980" height="4" /><rect class="f-hline" x="120" y="632" width="980" height="4" /><rect class="f-hline" x="120" y="760" width="980" height="4" /><rect class="f-hline" x="120" y="888" width="980" height="4" /><rect class="f-vline" x="118" y="250" width="4" height="640" /><rect class="f-vline" x="258" y="250" width="4" height="640" /><rect class="f-vline" x="398" y="250" width="4" height="640" /><rect class="f-vline" x="538" y="250" width="4" height="640" /><rect class="f-vline" x="678" y="250" width="4" height="640" /><rect class="f-vline" x="818" y="250" width="4" height="640" /><rect class="f-vline" x="958" y="250" width="4" height="640" /><rect class="f-vline" x="1098" y="250" width="4" height="640" /><text class="f-cal-d" x="242" y="302" text-anchor="end">1</text><text class="f-cal-d" x="382" y="302" text-anchor="end">2</text><text class="f-cal-d" x="522" y="302" text-anchor="end">3</text><text class="f-cal-d" x="662" y="302" text-anchor="end">4</text><text class="f-cal-d" x="802" y="302" text-anchor="end">5</text><text class="f-cal-d" x="942" y="302" text-anchor="end">6</text><text class="f-cal-d" x="1082" y="302" text-anchor="end">7</text><text class="f-cal-d" x="242" y="430" text-anchor="end">8</text><text class="f-cal-d" x="382" y="430" text-anchor="end">9</text><text class="f-cal-d" x="522" y="430" text-anchor="end">10</text><text class="f-cal-d" x="662" y="430" text-anchor="end">11</text><text class="f-cal-d" x="802" y="430" text-anchor="end">12</text><text class="f-cal-d" x="942" y="430" text-anchor="end">13</text><text class="f-cal-d" x="1082" y="430" text-anchor="end">14</text><text class="f-cal-d" x="242" y="558" text-anchor="end">15</text><text class="f-cal-d" x="382" y="558" text-anchor="end">16</text><text class="f-cal-d" x="522" y="558" text-anchor="end">17</text><text class="f-cal-d" x="662" y="558" text-anchor="end">18</text><text class="f-cal-d" x="802" y="558" text-anchor="end">19</text><text class="f-cal-d" x="942" y="558" text-anchor="end">20</text><text class="f-cal-d" x="1082" y="558" text-anchor="end">21</text><text class="f-cal-d" x="242" y="686" text-anchor="end">22</text><text class="f-cal-d" x="382" y="686" text-anchor="end">23</text><text class="f-cal-d" x="522" y="686" text-anchor="end">24</text><text class="f-cal-d" x="662" y="686" text-anchor="end">25</text><text class="f-cal-d" x="802" y="686" text-anchor="end">26</text><text class="f-cal-d" x="942" y="686" text-anchor="end">27</text><text class="f-cal-d" x="1082" y="686" text-anchor="end">28</text><text class="f-cal-d" x="242" y="814" text-anchor="end">29</text><text class="f-cal-d" x="382" y="814" text-anchor="end">30</text></g>
+        <circle id="f-ring" cx="232" cy="412" r="42" fill="none" stroke="#ff1f7a" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="100 120" stroke-dashoffset="110" transform="rotate(-110 232 412)" />
+        <polyline id="f-check" points="150,458 176,486 224,436" fill="none" stroke="#ff1f7a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100 120" stroke-dashoffset="110" />
+      </svg>
+      <div id="f-monday" class="f-big">Monday:</div>
+      <div id="f-handled" class="f-big">Handled.</div>
+      </div>
+    </div>
+
+    <!-- ================= C · HEARTBEAT ================= -->
+    <div id="f-c-clip" class="f-panel clip" data-start="4.05" data-duration="2.05" data-track-index="3" data-layout-allow-overflow>
+      <div id="f-c" class="f-panel">
+      <svg width="1920" height="1080">
+        <path id="f-ekg" d="M-20,860 L500,860 L540,800 L580,860 L640,860 L690,680 L740,990 L790,800 L830,860 L1080,860 L1130,640 L1185,1010 L1235,760 L1275,860 L1940,860"
+              fill="none" stroke="#0a0a0a" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"
+              pathLength="100" stroke-dasharray="100 120" stroke-dashoffset="110" />
+      </svg>
+      <div id="f-heart" class="f-big">Heartbeat:</div>
+      <div id="f-surround" class="f-big">Surround sound.</div>
+      </div>
+    </div>
+
+    <!-- ================= D · THE LINE ================= -->
+    <div id="f-d-clip" class="f-panel clip" data-start="5.85" data-duration="2.15" data-track-index="4" data-layout-allow-overflow>
+      <div id="f-d" class="f-panel">
+      <div id="f-banner">
+        <svg width="1560" height="330" viewBox="0 0 1560 330">
+          <path d="M60,40 Q780,-10 1520,30 L1490,290 Q780,250 30,300 Z" fill="#ff1f7a" />
+          <path d="M60,40 Q780,-10 1520,30 L1490,290 Q780,250 30,300 Z" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linejoin="round" transform="translate(-12,-9)" />
+        </svg>
+        <div class="line">Tomorrow's morning, today!</div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+
+      // a whip between two panels: the outgoing one accelerates out, the incoming one
+      // arrives at the same speed and decelerates, so the cut sits on the fastest frame
+      function whip(outSel, inSel, t) {
+        tl.fromTo(outSel, { x: 0 }, { x: -1920, duration: 0.22, ease: "power3.in" }, t - 0.22);
+        tl.fromTo(inSel, { x: 1920 }, { x: 0, duration: 0.34, ease: "power3.out" }, t - 0.04);
+      }
+
+      // ---------- A ----------
+      tl.fromTo("#f-head", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power2.out" }, 0.05);
+      tl.fromTo("#f-inbox", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0.15);
+      tl.fromTo("#f-envs", { x: 400 }, { x: 0, duration: 0.45, ease: "expo.out" }, 0.0);
+      // envelopes fly off the top of the stack, one after another
+      tl.to(".f-env", { x: "+=760", y: "-=1100", rotation: 28, transformOrigin: "50% 50%", duration: 0.36, ease: "power3.in", stagger: { each: 0.12, from: "end" } }, 0.45);
+      // the counter runs down with them
+      const n = { v: 247 };
+      tl.to(n, { v: 0, duration: 1.0, ease: "power1.inOut",
+        onUpdate: () => { document.getElementById("f-count").textContent = Math.round(n.v); } }, 0.45);
+      tl.fromTo("#f-count", { scale: 1 }, { scale: 1.22, duration: 0.07, ease: "power2.out", yoyo: true, repeat: 1 }, 1.45);
+      whip("#f-a", "#f-b", 2.2);
+
+      // ---------- B ----------
+      tl.fromTo(".f-hline", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.35, ease: "power3.out", stagger: 0.03 }, 2.15);
+      tl.fromTo(".f-vline", { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: 0.35, ease: "power3.out", stagger: 0.025 }, 2.2);
+      tl.fromTo([".f-cal-h", ".f-cal-d"], { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none", stagger: 0.006 }, 2.3);
+      tl.fromTo("#f-monday", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 2.4);
+      // the marker circles Monday the 9th, then ticks it
+      tl.to("#f-ring", { attr: { "stroke-dashoffset": 0 }, duration: 0.32, ease: "power2.inOut" }, 2.8);
+      tl.to("#f-check", { attr: { "stroke-dashoffset": 0 }, duration: 0.18, ease: "power2.out" }, 3.1);
+      tl.fromTo("#f-handled", { opacity: 0, scale: 1.25, transformOrigin: "0% 50%" }, { opacity: 1, scale: 1, duration: 0.2, ease: "back.out(2)" }, 3.12);
+      whip("#f-b", "#f-c", 4.3);
+
+      // ---------- C ----------
+      tl.fromTo("#f-heart", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 4.3);
+      tl.to("#f-ekg", { attr: { "stroke-dashoffset": 0 }, duration: 1.0, ease: "none" }, 4.35);
+      tl.fromTo("#f-surround", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 4.75);
+      whip("#f-c", "#f-d", 6.1);
+
+      // ---------- D ----------
+      tl.fromTo("#f-banner", { scale: 0.3, rotation: -6, transformOrigin: "50% 50%" },
+        { scale: 1, rotation: -2, duration: 0.34, ease: "back.out(1.8)" }, 6.12);
+      tl.fromTo("#f-banner .line", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power1.inOut" }, 6.3);
+
+      // the banner collapses to a dot at the frame's centre: the circle that opens the end card
+      tl.to("#f-banner", { scale: 0, rotation: 8, transformOrigin: "50% 50%", duration: 0.32, ease: "power3.in" }, 7.62);
+
+      window.__timelines["effects"] = tl;
+    })();
+  </script>
+</template>

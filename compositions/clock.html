@@ -1,0 +1,92 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: "League Gothic", sans-serif;
+    }
+    @font-face {
+      font-family: "Yellowtail";
+      src: url("assets/fonts/yellowtail.woff2") format("woff2");
+    }
+    #c-ground { position: absolute; inset: 0; background: #c79aa2; }
+    #c-art { position: absolute; left: 0; top: 0; overflow: visible; }
+    .c-type {
+      position: absolute;
+      color: #2b2724;
+      text-transform: uppercase;
+      line-height: 0.9;
+      white-space: nowrap;
+    }
+    #c-day { left: 1150px; top: 200px; font-size: 270px; }
+    #c-time { left: 1156px; top: 470px; font-size: 150px; }
+    #c-script {
+      position: absolute;
+      left: 1150px;
+      top: 650px;
+      font-family: "Yellowtail", cursive;
+      font-size: 104px;
+      line-height: 1.25;
+      color: #2b2724;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div id="root" data-composition-id="clock" data-width="1920" data-height="1080">
+    <div id="c-ground"></div>
+
+    <!-- the 1950s sunburst wall clock: 24 brass-tipped spokes, a paper face, two hands -->
+    <svg id="c-art" width="1920" height="1080" data-layout-allow-overflow>
+      <g id="c-spokes">
+        <g class="c-spoke"><line x1="660" y1="560" x2="660.0" y2="130.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="660.0" cy="130.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="755.8" y2="202.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="755.8" cy="202.6" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="875.0" y2="187.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="875.0" cy="187.6" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="921.6" y2="298.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="921.6" cy="298.4" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="1032.4" y2="345.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="1032.4" cy="345.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="1017.4" y2="464.2" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="1017.4" cy="464.2" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="1090.0" y2="560.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="1090.0" cy="560.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="1017.4" y2="655.8" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="1017.4" cy="655.8" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="1032.4" y2="775.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="1032.4" cy="775.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="921.6" y2="821.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="921.6" cy="821.6" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="875.0" y2="932.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="875.0" cy="932.4" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="755.8" y2="917.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="755.8" cy="917.4" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="660.0" y2="990.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="660.0" cy="990.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="564.2" y2="917.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="564.2" cy="917.4" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="445.0" y2="932.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="445.0" cy="932.4" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="398.4" y2="821.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="398.4" cy="821.6" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="287.6" y2="775.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="287.6" cy="775.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="302.6" y2="655.8" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="302.6" cy="655.8" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="230.0" y2="560.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="230.0" cy="560.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="302.6" y2="464.2" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="302.6" cy="464.2" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="287.6" y2="345.0" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="287.6" cy="345.0" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="398.4" y2="298.4" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="398.4" cy="298.4" r="11" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="445.0" y2="187.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="445.0" cy="187.6" r="17" fill="#c9b84a" /></g><g class="c-spoke"><line x1="660" y1="560" x2="564.2" y2="202.6" stroke="#2b2724" stroke-width="7" stroke-linecap="round" /><circle cx="564.2" cy="202.6" r="11" fill="#c9b84a" /></g>
+      </g>
+      <circle id="c-face" cx="660" cy="560" r="330" fill="#e9e1d3" />
+      <circle id="c-ring" cx="660" cy="560" r="330" fill="none" stroke="#2b2724" stroke-width="8" transform="translate(-12,-9)" />
+      <g id="c-ticks">
+        <rect x="653.0" y="242" width="14" height="44" fill="#2b2724" transform="rotate(0 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(30 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(60 660 560)" /><rect x="653.0" y="242" width="14" height="44" fill="#2b2724" transform="rotate(90 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(120 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(150 660 560)" /><rect x="653.0" y="242" width="14" height="44" fill="#2b2724" transform="rotate(180 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(210 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(240 660 560)" /><rect x="653.0" y="242" width="14" height="44" fill="#2b2724" transform="rotate(270 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(300 660 560)" /><rect x="656.0" y="242" width="8" height="28" fill="#2b2724" transform="rotate(330 660 560)" />
+      </g>
+      <g id="c-hands">
+        <rect id="c-hour" x="648" y="380" width="24" height="200" rx="12" fill="#2b2724" transform="rotate(211.5 660 560)" />
+        <rect id="c-min" x="653" y="290" width="14" height="290" rx="7" fill="#2b2724" transform="rotate(18 660 560)" />
+        <g id="c-sec" transform="rotate(140 660 560)"><rect x="657" y="260" width="6" height="360" fill="#a8434f" /><circle cx="660" cy="260" r="10" fill="#a8434f" /></g>
+        <circle cx="660" cy="560" r="22" fill="#c9b84a" />
+      </g>
+    </svg>
+
+    <div id="c-day" class="c-type clip" data-start="0" data-duration="3.75" data-track-index="2">Monday.</div>
+    <div id="c-time" class="c-type clip" data-start="0" data-duration="3.75" data-track-index="2">7:04 A.M.</div>
+    <div id="c-script" class="clip" data-start="1.9" data-duration="1.85" data-track-index="2">Rise and… shine?</div>
+  </div>
+
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const C = "660 560";
+
+      // hands at 7:03, the minute hand ticks to 7:04 with a mechanical overshoot
+      tl.fromTo("#c-min", { rotation: 18, svgOrigin: C },
+        { rotation: 24, svgOrigin: C, duration: 0.22, ease: "back.out(3)" }, 0.3);
+
+      // the type: frame 0 already reads as a poster; "7:04 A.M." blurs in on the tick
+      tl.fromTo("#c-time", { opacity: 0, filter: "blur(10px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0.32);
+      tl.fromTo("#c-script", { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power1.inOut" }, 1.95);
+
+      // the second hand sweeps: constant speed is the point
+      tl.fromTo("#c-sec", { rotation: 140, svgOrigin: C },
+        { rotation: 140 + 6 * 3.6, svgOrigin: C, duration: 3.6, ease: "none" }, 0);
+
+      // EXIT: words leave one by one on a blur; spokes retract into the face, outer ones last
+      tl.to(["#c-script", "#c-time", "#c-day"], { opacity: 0, filter: "blur(10px)", duration: 0.18, ease: "power2.in", stagger: 0.06 }, 3.4);
+      tl.to(".c-spoke", { scale: 0, svgOrigin: C, duration: 0.32, ease: "power3.in", stagger: { each: 0.012, from: "random" } }, 3.5);
+      tl.to("#c-hands", { scale: 0, svgOrigin: C, duration: 0.28, ease: "power3.in" }, 3.55);
+      tl.to("#c-ticks", { opacity: 0, scale: 0.9, svgOrigin: C, duration: 0.22, ease: "power2.in" }, 3.6);
+      // COLOUR FLOOD: the face holds still while the wall turns kitchen teal
+      tl.to("#c-ground", { backgroundColor: "#8fa9a3", duration: 0.4, ease: "power2.inOut" }, 4.0);
+
+      window.__timelines["clock"] = tl;
+    })();
+  </script>
+</template>
