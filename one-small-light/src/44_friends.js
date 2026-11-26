@@ -1,28 +1,36 @@
 'use strict';
 // ---- FRIENDS: a snowshoe hare in its white winter coat, a robin, and the little lantern. ----
 const Hare = (() => {
+  // a snowshoe hare in its white winter coat. Its shapes morph between a round sitting pose and the long stretch of a
+  // hop (same points, blended), so the body squashes and stretches instead of swapping drawings.
   const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a' };
-  const { tr, shape, eye, dot } = Ink;
-  // Pose: emerge (0 under the snow .. 1 out), hop (px), stretch, perk (ears 0 back .. 1 up), blink
+  const { shape, eye, dot, at, mix } = Ink;
+  const K = {
+    body: [[[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], [[-40, -22], [-44, -36], [-28, -52], [6, -54], [32, -50], [46, -38], [38, -24], [0, -18]]],
+    foot: [[[-14, -2], [-12, -12], [18, -10], [30, -4], [26, 2], [-12, 2]], [[-36, -26], [-44, -32], [-66, -20], [-72, -10], [-64, -8], [-42, -16]]],
+    paw: [[[18, -10], [26, -12], [32, -4], [26, 1], [18, 0]], [[40, -32], [52, -30], [60, -20], [54, -16], [44, -22]]],
+    head: [[0, 0], [16, 4]],
+  };
+  const HEAD = [[8, -58], [14, -76], [30, -82], [44, -72], [48, -60], [40, -52], [22, -50]];
+  const M = (k, u) => K[k][0].map((p, i) => mix(p, K[k][1][i], u));
+  // P: emerge (0 under the snow .. 1 out), stretch (0 sit .. 1 mid-hop), crouch, ears [near, far] (radians, 0 up), blink
   function draw(ctx, P) {
-    const em = P.emerge === undefined ? 1 : P.emerge, sink = (1 - em) * 110, hop = P.hop || 0, st = P.stretch || 0;
-    ctx.save(); ctx.beginPath(); ctx.rect(-200, -400, 400, 404); ctx.clip();
-    ctx.translate(0, sink - hop); ctx.scale(1 - st * 0.08, 1 + st * 0.14);
-    const perk = P.perk === undefined ? 1 : P.perk;
-    const ear = (bx, tipUp, tipBack, id) => { const tp = [lerp(tipBack[0], tipUp[0], perk), lerp(tipBack[1], tipUp[1], perk)];
-      const mid = [lerp(bx, tp[0], 0.5), lerp(-76, tp[1], 0.5)], n = [tp[1] - -76, -(tp[0] - bx)], l = Math.hypot(n[0], n[1]) || 1, w = 7;
-      const pts = [[bx - 5, -74], [mid[0] - n[0] / l * w, mid[1] - n[1] / l * w], tp, [mid[0] + n[0] / l * w, mid[1] + n[1] / l * w], [bx + 5, -74]];
-      shape(ctx, pts, C.fur, { id, shadow: [[bx, -74], mid, tp, [mid[0] + n[0] / l * w, mid[1] + n[1] / l * w], [bx + 5, -74]], shadowCol: C.sh });
-      shape(ctx, [[lerp(mid[0], tp[0], 0.55) - 5, lerp(mid[1], tp[1], 0.55)], tp, [lerp(mid[0], tp[0], 0.55) + 5, lerp(mid[1], tp[1], 0.55)]], C.tip, { id: id + 1, lw: 1.2 });
-    };
-    ear(20, [6, -132], [-30, -96], 80);
-    shape(ctx, [[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], C.fur, { id: 82, shadow: [[-40, -18], [34, -14], [34, 6], [-40, 6]], shadowCol: C.sh });
-    shape(ctx, [[-40, -20], [-48, -26], [-46, -14], [-36, -12]], C.fur, { id: 83 });
-    shape(ctx, [[-14, -2], [-12, -12], [18, -10], [30, -4], [26, 2], [-12, 2]], C.fur, { id: 84, shadow: [[-14, -4], [32, -4], [32, 4], [-14, 4]], shadowCol: C.sh });
-    shape(ctx, [[8, -58], [14, -76], [30, -82], [44, -72], [48, -60], [40, -52], [22, -50]], C.fur, { id: 85, shadow: [[6, -58], [50, -58], [50, -48], [6, -48]], shadowCol: C.sh });
-    ear(30, [36, -132], [0, -100], 86);
-    dot(ctx, 47, -62, 2.4, C.nose);
-    eye(ctx, 36, -68, 2.8, P.blink ? 0 : 1);
+    const em = P.emerge === undefined ? 1 : P.emerge, st = clamp(P.stretch || 0), cr = P.crouch || 0;
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, -400, 400, 403); ctx.clip();
+    ctx.translate(0, (1 - em) * 110); ctx.scale(1 + cr * 0.06, 1 - cr * 0.1);
+    const ho = K.head[0].map((v, i) => lerp(v, K.head[1][i], st)), head = HEAD.map(p => [p[0] + ho[0], p[1] + ho[1]]);
+    const ear = (bx, a, id) => { const b = [bx + ho[0], -76 + ho[1]], q = p => at(b, a - st * 0.5, p);
+      shape(ctx, [q([-5, 2]), q([-7, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], C.fur, { shadow: [q([0, 2]), q([1, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], shadowCol: C.sh, lw: 1.6 });
+      shape(ctx, [q([-5, -34]), q([-2, -50]), q([3, -34])], C.tip, { lw: 1.2 }); };
+    ear(20, P.ears ? P.ears[1] - 0.25 : -0.25);
+    shape(ctx, M('body', st), C.fur, { shadow: [[-50, -16], [50, -12], [50, 6], [-50, 6]], shadowCol: C.sh, lw: 1.8 });
+    shape(ctx, [[-36 - st * 8, -22 - st * 10], [-46 - st * 8, -28 - st * 10], [-44 - st * 8, -14 - st * 10], [-34 - st * 8, -12 - st * 10]], C.fur, { lw: 1.6 });
+    shape(ctx, M('foot', st), C.fur, { shadow: M('foot', st).map(p => [p[0], p[1] + 5]), shadowCol: C.sh, lw: 1.6 });
+    shape(ctx, M('paw', st), C.fur, { lw: 1.5 });
+    shape(ctx, head, C.fur, { shadow: head.map(p => [p[0], p[1] + 8]), shadowCol: C.sh, lw: 1.8 });
+    ear(30, P.ears ? P.ears[0] : 0);
+    dot(ctx, 47 + ho[0], -62 + ho[1], 2.4, C.nose);
+    eye(ctx, 36 + ho[0], -68 + ho[1], 2.8, P.blink === undefined ? 1 : P.blink);
     ctx.restore();
   }
   return { draw };
@@ -42,7 +50,7 @@ const Robin = (() => {
     shape(ctx, [[-6, -3], [4, -3], [0, -1]], C.belly, { id: 93, lw: 0 });
     shape(ctx, [[13, -18], [19, -16.5], [13, -15]], C.beak, { id: 94, lw: 0.8 });
     eye(ctx, 8, -18.5, 1.4, 1);
-    const a = fly ? Math.sin(P.flap || 0) * 1.1 - 0.3 : 0.1;
+    const a = P.wing !== undefined ? P.wing : fly ? Math.sin(P.flap || 0) * 1.1 - 0.3 : 0.1;
     ctx.save(); ctx.translate(-3, -14); ctx.rotate(-a);
     shape(ctx, [[0, 0], [-6, -4], [-18, -2], [-14, 4], [-2, 4]], '#6a4a36', { id: 95, lw: 1.3 });
     ctx.restore(); ctx.restore();

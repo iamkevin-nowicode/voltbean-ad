@@ -28,8 +28,7 @@ const Score = (() => {
   // ---- bars 3-4: the climb, trotting eighths
   mel(3, [[0, 71, 0.5], [0.5, 72, 0.5], [1, 76, 0.5], [1.5, 74, 0.5], [2, 72, 0.5], [2.5, 71, 0.5], [3, 69, 1]]);
   mel(4, [[0, 69, 0.5], [0.5, 71, 0.5], [1, 74, 0.5], [1.5, 78, 0.5], [2, 76, 0.5], [2.5, 74, 0.5], [3, 69, 1]]);
-  // footsteps: every eighth from bar 2 beat 3 to bar 5 beat 1 (20 steps). Each one leaves a print in the snow.
-  for (let k = 0; k < 20; k++) N.push({ t: at(2, 3) + k * BEAT / 2, d: 0.08, m: 0, i: 'step', v: 0.5 + 0.12 * (k % 2), p: -0.2 + k * 0.02, tag: 'step', k });
+  // footsteps are not written here: the feet decide when they land (see Actors.precompute), and each one crunches.
   // ---- bar 5: two hops that rise, one flop into the snow
   mel(5, [[0, 67, 1, 0.45]]);
   n(5, 2, 0.5, 71, 'pluck', 0.6, { tag: 'hop', k: 0 }); n(5, 3, 0.5, 76, 'pluck', 0.7, { tag: 'hop', k: 1 });
@@ -39,7 +38,7 @@ const Score = (() => {
   n(6, 3, 0.4, 0, 'chirp', 0.45, { tag: 'robin', p: -0.3 });
   // ---- bar 7: friends. A pop from the snow (hare), sleigh bells for the deer's steps.
   n(7, 1, 0.5, 62, 'pluck', 0.6, { tag: 'hare' });
-  for (let k = 0; k < 8; k++) n(7, 1 + k * 0.5, 0.25, 0, 'sleigh', k % 2 ? 0.25 : 0.42, { tag: 'deerstep', k, p: 0.5 - k * 0.05 });
+  for (let k = 0; k < 8; k++) n(7, 1 + k * 0.5, 0.25, 0, 'sleigh', k % 2 ? 0.25 : 0.42, { tag: 'sleigh', k, p: 0.5 - k * 0.05 });
   mel(7, [[0, 74, 0.5], [0.5, 78, 0.5], [1, 81, 1], [2, 78, 0.5], [2.5, 76, 0.5], [3, 74, 1]]);
   // ---- bar 8: the lift, a rising arpeggio
   mel(8, [[0, 71, 0.5], [0.5, 74, 0.5], [1, 79, 0.5], [1.5, 83, 0.5], [2, 72, 0.5], [2.5, 76, 0.5], [3, 79, 0.5], [3.5, 84, 0.5]], { tag: 'lift' });
@@ -62,5 +61,6 @@ const Score = (() => {
   const tagged = tag => N.filter(x => x.tag === tag);
   // how long ago the k-th note with a tag sounded (Infinity if not yet)
   const since = (tag, k, t) => { const x = N.find(q => q.tag === tag && q.k === k); return x && t >= x.t ? t - x.t : Infinity; };
-  return { notes: N, tagged, since };
+  const add = list => { N.push(...list); N.sort((a, b) => a.t - b.t); };
+  return { notes: N, tagged, since, add };
 })();

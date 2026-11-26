@@ -5,22 +5,24 @@
   const cv = document.getElementById('c'), ld = document.getElementById('ld'), st = document.getElementById('st'), bar = document.querySelector('#bar s'), hud = document.getElementById('hud');
   const mk = s => { const c = document.createElement('canvas'); c.width = W * s; c.height = H * s; const ctx = c.getContext('2d'); ctx._s = s; return ctx; };
   const A = { actors: mk(1), sky: mk(0.5), back: mk(0.5), front: mk(0.5), light: mk(0.25) };
-  function frame(t) {
+  function frame(t, camO) {
     t = clamp(t, 0, FILM - 1e-4);
-    const c = Story.camera(t), F = Actors.draw(t, c, A);
+    const c = camO || Story.camera(t), F = Actors.draw(t, c, A);
     Glow.sky(A.sky, t, c); Glow.back(A.back, t, c, F); Glow.front(A.front, t, c, F); Glow.lightmap(A.light, t, c, F);
     Stage.render(t, c, F, A);
   }
   const tick = () => new Promise(r => setTimeout(r, 0));
   const say = (s, k) => { if (st) st.textContent = s; if (bar) bar.style.width = (k * 100) + '%'; };
   async function boot() {
+    say('rehearsing', 0.05); await tick();
+    Actors.boot();
     if (!RENDER) Sound.prepare();
     say('stretching the paper', 0.1); await tick();
     World.build(); say('mixing the colours', 0.7); await tick();
     Stage.init(cv, A, RENDER); frame(0); say('ready', 1); await tick();
   }
   const ready = boot();
-  if (RENDER) { window.__film = { ready, duration: FILM, frame: t => { frame(t); return cv.toDataURL('image/jpeg', 0.93); } }; return; }
+  if (RENDER) { window.__film = { ready, duration: FILM, frame: (t, camO) => { frame(t, camO); return cv.toDataURL('image/jpeg', 0.93); } }; return; }
 
   // ---- the player
   let playing = false, paused = false, clock = 0, last = 0, usingAudio = false;

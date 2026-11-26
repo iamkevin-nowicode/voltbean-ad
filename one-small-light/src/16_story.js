@@ -2,11 +2,12 @@
 // ---- STORY: where the camera is, and where the fox is, at any moment. ----
 const Story = (() => {
   // the fox trots up the hill from bar 2 beat 3 until bar 5 beat 1
-  const foxWalkX = t => kf([[3.75, 900], [4.4, 960, 'in'], [9.4, 2370, 'lin'], [10.0, 2440, 'out']], t);
+  const foxWalkX = t => Phys.cruise(t, 3.7, 10.1, 1500, 2425, 1.0)[0];
   const mix3 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
   const SHOTS = [
-    [10.6, [2560, 990, 1.05]], [12.2, [2540, 1005, 1.07], 'sine'], [13.3, [2480, 1060, 1.3]], [14.6, [2490, 1052, 1.32], 'sine'],
-    [15.9, [2610, 965, 0.95]], [17.6, [2620, 955, 0.96], 'sine'], [19.9, [2630, 845, 1.0]], [22.5, [2620, 850, 1.0], 'sine'],
+    [10.6, [2500, 1060, 1.35]], [12.2, [2492, 1068, 1.4], 'sine'], [13.3, [2470, 1085, 1.6]], [14.6, [2475, 1080, 1.62], 'sine'],
+    [15.9, [2620, 1020, 1.05]], [17.0, [2600, 1030, 1.1], 'sine'], [17.8, [2580, 1068, 1.35]], [18.8, [2600, 1040, 1.3]],
+    [20.0, [2640, 900, 1.3]], [21.2, [2640, 905, 1.25], 'sine'], [22.5, [2660, 930, 1.15]],
     [25.0, [2420, 905, 0.76]], [27.3, [1880, 1010, 0.6]], [30.5, [1860, 1015, 0.6], 'sine'],
   ];
   // camera = [centre x, centre y, zoom] in world units
@@ -14,7 +15,7 @@ const Story = (() => {
     let c;
     if (t < 10.6) {
       const wide = kf([[0, [1800, 1060, 0.6]], [3.9, [1780, 1075, 0.63], 'sine']], t);
-      const fx = foxWalkX(t), follow = [fx + 270, hillY(fx) - 200, 1.0];
+      const fx = foxWalkX(t), follow = [fx + 250, hillY(fx) - 170, 1.15];
       c = mix3(wide, follow, smooth(3.9, 6.4, t));
       c = mix3(c, SHOTS[0][1], smooth(8.6, 10.6, t));
     } else c = kf(SHOTS, t);

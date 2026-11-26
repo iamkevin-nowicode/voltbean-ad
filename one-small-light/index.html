@@ -111,8 +111,7 @@ const Score = (() => {
   // ---- bars 3-4: the climb, trotting eighths
   mel(3, [[0, 71, 0.5], [0.5, 72, 0.5], [1, 76, 0.5], [1.5, 74, 0.5], [2, 72, 0.5], [2.5, 71, 0.5], [3, 69, 1]]);
   mel(4, [[0, 69, 0.5], [0.5, 71, 0.5], [1, 74, 0.5], [1.5, 78, 0.5], [2, 76, 0.5], [2.5, 74, 0.5], [3, 69, 1]]);
-  // footsteps: every eighth from bar 2 beat 3 to bar 5 beat 1 (20 steps). Each one leaves a print in the snow.
-  for (let k = 0; k < 20; k++) N.push({ t: at(2, 3) + k * BEAT / 2, d: 0.08, m: 0, i: 'step', v: 0.5 + 0.12 * (k % 2), p: -0.2 + k * 0.02, tag: 'step', k });
+  // footsteps are not written here: the feet decide when they land (see Actors.precompute), and each one crunches.
   // ---- bar 5: two hops that rise, one flop into the snow
   mel(5, [[0, 67, 1, 0.45]]);
   n(5, 2, 0.5, 71, 'pluck', 0.6, { tag: 'hop', k: 0 }); n(5, 3, 0.5, 76, 'pluck', 0.7, { tag: 'hop', k: 1 });
@@ -122,7 +121,7 @@ const Score = (() => {
   n(6, 3, 0.4, 0, 'chirp', 0.45, { tag: 'robin', p: -0.3 });
   // ---- bar 7: friends. A pop from the snow (hare), sleigh bells for the deer's steps.
   n(7, 1, 0.5, 62, 'pluck', 0.6, { tag: 'hare' });
-  for (let k = 0; k < 8; k++) n(7, 1 + k * 0.5, 0.25, 0, 'sleigh', k % 2 ? 0.25 : 0.42, { tag: 'deerstep', k, p: 0.5 - k * 0.05 });
+  for (let k = 0; k < 8; k++) n(7, 1 + k * 0.5, 0.25, 0, 'sleigh', k % 2 ? 0.25 : 0.42, { tag: 'sleigh', k, p: 0.5 - k * 0.05 });
   mel(7, [[0, 74, 0.5], [0.5, 78, 0.5], [1, 81, 1], [2, 78, 0.5], [2.5, 76, 0.5], [3, 74, 1]]);
   // ---- bar 8: the lift, a rising arpeggio
   mel(8, [[0, 71, 0.5], [0.5, 74, 0.5], [1, 79, 0.5], [1.5, 83, 0.5], [2, 72, 0.5], [2.5, 76, 0.5], [3, 79, 0.5], [3.5, 84, 0.5]], { tag: 'lift' });
@@ -145,7 +144,8 @@ const Score = (() => {
   const tagged = tag => N.filter(x => x.tag === tag);
   // how long ago the k-th note with a tag sounded (Infinity if not yet)
   const since = (tag, k, t) => { const x = N.find(q => q.tag === tag && q.k === k); return x && t >= x.t ? t - x.t : Infinity; };
-  return { notes: N, tagged, since };
+  const add = list => { N.push(...list); N.sort((a, b) => a.t - b.t); };
+  return { notes: N, tagged, since, add };
 })();
 
 // ===== 10_paint.js =====
@@ -225,11 +225,12 @@ const Paint = (() => {
 // ---- STORY: where the camera is, and where the fox is, at any moment. ----
 const Story = (() => {
   // the fox trots up the hill from bar 2 beat 3 until bar 5 beat 1
-  const foxWalkX = t => kf([[3.75, 900], [4.4, 960, 'in'], [9.4, 2370, 'lin'], [10.0, 2440, 'out']], t);
+  const foxWalkX = t => Phys.cruise(t, 3.7, 10.1, 1500, 2425, 1.0)[0];
   const mix3 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)];
   const SHOTS = [
-    [10.6, [2560, 990, 1.05]], [12.2, [2540, 1005, 1.07], 'sine'], [13.3, [2480, 1060, 1.3]], [14.6, [2490, 1052, 1.32], 'sine'],
-    [15.9, [2610, 965, 0.95]], [17.6, [2620, 955, 0.96], 'sine'], [19.9, [2630, 845, 1.0]], [22.5, [2620, 850, 1.0], 'sine'],
+    [10.6, [2500, 1060, 1.35]], [12.2, [2492, 1068, 1.4], 'sine'], [13.3, [2470, 1085, 1.6]], [14.6, [2475, 1080, 1.62], 'sine'],
+    [15.9, [2620, 1020, 1.05]], [17.0, [2600, 1030, 1.1], 'sine'], [17.8, [2580, 1068, 1.35]], [18.8, [2600, 1040, 1.3]],
+    [20.0, [2640, 900, 1.3]], [21.2, [2640, 905, 1.25], 'sine'], [22.5, [2660, 930, 1.15]],
     [25.0, [2420, 905, 0.76]], [27.3, [1880, 1010, 0.6]], [30.5, [1860, 1015, 0.6], 'sine'],
   ];
   // camera = [centre x, centre y, zoom] in world units
@@ -237,7 +238,7 @@ const Story = (() => {
     let c;
     if (t < 10.6) {
       const wide = kf([[0, [1800, 1060, 0.6]], [3.9, [1780, 1075, 0.63], 'sine']], t);
-      const fx = foxWalkX(t), follow = [fx + 270, hillY(fx) - 200, 1.0];
+      const fx = foxWalkX(t), follow = [fx + 250, hillY(fx) - 170, 1.15];
       c = mix3(wide, follow, smooth(3.9, 6.4, t));
       c = mix3(c, SHOTS[0][1], smooth(8.6, 10.6, t));
     } else c = kf(SHOTS, t);
@@ -373,7 +374,7 @@ const World = (() => {
   }
   const midY = x => (x > 2500 ? 1235 + 70 * Math.sin((x - 2500) / 520) + 20 * vn1(x / 90) : 1560 + 60 * vn1(x / 300));
   function paintMid(ctx, ex) {
-    Paint.wash(ctx, Paint.ridge(midY, ex[0], ex[2], 12, ex[3]), mixC(P.snow, P.snowB, 0.4), { seed: 51, layers: 16, alpha: 0.09, rough: 0.03 });
+    Paint.wash(ctx, Paint.ridge(midY, ex[0], ex[2], 12, ex[3]), mixC(P.snow, P.snowB, 0.8), { seed: 51, layers: 16, alpha: 0.09, rough: 0.03 });
     Paint.wash(ctx, Paint.ridge(x => midY(x) + 50 + 40 * vn1(x / 150), ex[0], ex[2], 16, ex[3]), P.snowB, { seed: 52, layers: 10, alpha: 0.05 });
     const R = rng(53);
     for (let i = 0; i < 26; i++) {        // a fir wood on the far ridge
@@ -397,6 +398,10 @@ const World = (() => {
     // cool hollows and the far side in shade, a warm lip where the last sun catches the crest
     Paint.wash(ctx, Paint.ridge(x => hillY(x) + 150 + 60 * vn1(x / 260), ex[0], ex[2], 18, ex[3]), P.snowB, { seed: 63, layers: 14, alpha: 0.05 });
     Paint.wash(ctx, Paint.ridge(x => hillY(x) + 330 + 90 * vn1(x / 300 + 4), ex[0], ex[2], 20, ex[3]), P.snowS, { seed: 64, layers: 12, alpha: 0.035 });
+    // the near crest: a cool shadow line where the snow turns away, so the ground reads against the snowfields behind
+    const rim = []; for (let x = ex[0]; x <= ex[2]; x += 12) rim.push([x, hillY(x) + 1.5]);
+    Paint.stroke(ctx, rim, 5, hex('#8f97c6'), { seed: 68, bristles: 4, alpha: 0.5 });
+    Paint.stroke(ctx, rim.map(p => [p[0], p[1] + 7]), 14, hex('#c6c9e6'), { seed: 69, bristles: 6, alpha: 0.25 });
     const lip = []; for (let x = 700; x <= 2820; x += 30) lip.push([x, hillY(x) + 5]);
     Paint.stroke(ctx, lip, 9, P.snowW, { seed: 66, bristles: 5, alpha: 0.35 });
     const path = []; for (let x = 820; x <= 2460; x += 24) path.push([x, hillY(x) + 10 + 3 * Math.sin(x / 70)]);
@@ -428,7 +433,7 @@ const World = (() => {
     Paint.dab(ctx, cx + 30, TREE.base + 6, 260, 26, P.snowS, { seed: 70, alpha: 0.05, n: 18 });
     Paint.wash(ctx, [[cx - 12, TREE.base + 4], [cx - 9, TREE.base - 70], [cx + 9, TREE.base - 70], [cx + 12, TREE.base + 4]], P.bark, { seed: 71, layers: 10, alpha: 0.2, depth: 2, rough: 0.04, edge: 0.4 });
     for (let i = 0; i < tiers; i++) {
-      const yb = TREE.base - 46 - i * 69, w = 190 * (1 - i / 7.6), yt = (i === tiers - 1 ? TREE.top : yb - 138);
+      const gap = (TREE.base - 46 - (TREE.top + 92)) / (tiers - 1), yb = TREE.base - 46 - i * gap, w = 160 * (1 - i / 7.6), yt = (i === tiers - 1 ? TREE.top : yb - gap * 2.1);
       const R = rng(500 + i), sc = 4 + (i < 4 ? 1 : 0), tips = [];
       const pts = [[cx, yt]];
       for (let k = 1; k <= 6; k++) { const u = k / 6; pts.push([cx + w * u, yt + (yb - yt) * Math.pow(u, 0.9) + 8 * Math.sin(u * Math.PI)]); }
@@ -486,15 +491,12 @@ const World = (() => {
 
 // ===== 30_ink.js =====
 
-// ---- INK & PAINT: the cel kit. Characters are drawn like animation cels: a smooth inked outline, a flat colour,
-// a flat shadow tone, and a line that "boils" - every drawing is traced again, so the line trembles 12 times a second.
+// ---- INK & PAINT: the cel kit. Characters are drawn like animation cels: a smooth inked outline, a flat colour and a
+// flat shadow tone. Shapes are smooth curves through points that ride on a skeleton, so bodies bend instead of breaking.
 const Ink = (() => {
-  let boil = 0;                    // which drawing we are on (changes 12x a second)
-  const setBoil = t => (boil = Math.floor(t * 12));
   const LINE = '#3b2a22';
-  // closed (or open) Catmull-Rom curve through points, each point nudged by the boil
-  function curve(ctx, pts, closed = true, id = 0, amp = 0.9) {
-    const q = pts.map((p, i) => [p[0] + (hash(boil * 7.13 + id * 1.7 + i * 3.1) - 0.5) * 2 * amp, p[1] + (hash(boil * 3.71 + id * 2.3 + i * 5.7) - 0.5) * 2 * amp]);
+  // closed (or open) Catmull-Rom curve through points
+  function curve(ctx, q, closed = true) {
     const n = q.length; ctx.beginPath();
     const P = i => (closed ? q[(i + n) % n] : q[clamp(i, 0, n - 1)]);
     ctx.moveTo(q[0][0], q[0][1]);
@@ -505,211 +507,356 @@ const Ink = (() => {
     }
     if (closed) ctx.closePath();
   }
-  // a filled cel shape. o.shadow: points of a shadow shape clipped inside. o.lw: line weight.
+  // a filled cel shape. o.shadow: a shadow shape clipped inside. o.lw: line weight (0 = no line).
   function shape(ctx, pts, fill, o = {}) {
-    const id = o.id || 0;
-    curve(ctx, pts, true, id, o.amp); ctx.fillStyle = fill; ctx.fill();
-    if (o.shadow) { ctx.save(); curve(ctx, pts, true, id, o.amp); ctx.clip(); curve(ctx, o.shadow, true, id + 50, o.amp); ctx.fillStyle = o.shadowCol || 'rgba(60,30,40,0.28)'; ctx.fill(); ctx.restore(); }
-    if (o.lw !== 0) { curve(ctx, pts, true, id, o.amp); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2.2; ctx.lineJoin = 'round'; ctx.stroke(); }
+    curve(ctx, pts, true); ctx.fillStyle = fill; ctx.fill();
+    if (o.shadow) { ctx.save(); curve(ctx, pts, true); ctx.clip(); curve(ctx, o.shadow, true); ctx.fillStyle = o.shadowCol || 'rgba(60,30,40,0.28)'; ctx.fill(); ctx.restore(); }
+    if (o.lw !== 0) { curve(ctx, pts, true); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2; ctx.lineJoin = 'round'; ctx.stroke(); }
   }
-  // a limb: an inked stroke of width w from a through a bend to b, with an optional darker "sock" at the end
-  function limb(ctx, pts, w, col, o = {}) {
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    curve(ctx, pts, false, o.id || 0, 0.5); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = w + 4.4; ctx.stroke();
-    curve(ctx, pts, false, o.id || 0, 0.5); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke();
-    if (o.sock) { const n = pts.length, a = pts[n - 2], b = pts[n - 1], s = [[lerp(a[0], b[0], 1 - o.sockLen), lerp(a[1], b[1], 1 - o.sockLen)], b];
-      curve(ctx, s, false, (o.id || 0) + 9, 0.4); ctx.strokeStyle = o.sock; ctx.lineWidth = w; ctx.stroke(); }
+  // the outline of a tapered tube along a polyline (limbs, necks, tails): widths per point, rounded ends
+  function tubePts(pts, wid) {
+    const L = [], R = [], n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1, w = wid[i] / 2;
+      L.push([pts[i][0] - ty / l * w, pts[i][1] + tx / l * w]); R.push([pts[i][0] + ty / l * w, pts[i][1] - tx / l * w]);
+    }
+    const cap = (p, q, w, s) => { const tx = p[0] - q[0], ty = p[1] - q[1], l = Math.hypot(tx, ty) || 1; return [p[0] + tx / l * w * 0.55 * s, p[1] + ty / l * w * 0.55 * s]; };
+    return L.concat([cap(pts[n - 1], pts[n - 2], wid[n - 1] / 2, 1)], R.reverse(), [cap(pts[0], pts[1], wid[0] / 2, 1)]);
   }
+  const tube = (ctx, pts, wid, fill, o) => shape(ctx, tubePts(pts, wid), fill, o);
   const dot = (ctx, x, y, r, col) => { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = col; ctx.fill(); };
-  // an eye: open (dark oval + glint) or closed (an arc)
-  function eye(ctx, x, y, r, open, look = 0) {
-    if (open > 0.5) { ctx.save(); ctx.translate(x, y); ctx.scale(1, 1.25); dot(ctx, 0, 0, r, '#21160f'); ctx.restore(); dot(ctx, x + r * 0.35 + look, y - r * 0.45, r * 0.38, '#fff8ea'); }
-    else { ctx.beginPath(); ctx.arc(x, y - r * 0.4, r * 1.1, 0.25, Math.PI - 0.25); ctx.strokeStyle = LINE; ctx.lineWidth = 1.8; ctx.stroke(); }
+  // an eye: open (dark oval + glint), half, or closed (a soft arc)
+  function eye(ctx, x, y, r, open) {
+    if (open > 0.15) { ctx.save(); ctx.translate(x, y); ctx.scale(1, 1.2 * open); dot(ctx, 0, 0, r, '#21160f'); ctx.restore(); if (open > 0.6) dot(ctx, x + r * 0.35, y - r * 0.4, r * 0.36, '#fff8ea'); }
+    else { ctx.beginPath(); ctx.arc(x, y - r * 0.5, r * 1.1, 0.3, Math.PI - 0.3); ctx.strokeStyle = LINE; ctx.lineWidth = 1.6; ctx.stroke(); }
   }
-  // two-bone limb solve: from hip h to foot f with segment lengths a,b; bend +1/-1 picks the knee side
-  function knee(h, f, a, b, bend) {
-    const dx = f[0] - h[0], dy = f[1] - h[1], d = Math.min(Math.hypot(dx, dy), a + b - 0.01), ang = Math.atan2(dy, dx);
+  // two-bone IK: from root h toward target f with bone lengths a, b. bend +1 puts the middle joint on the +x side (a knee),
+  // -1 on the -x side (an elbow) for a limb hanging downward. Out-of-reach targets are approached as far as the limb allows.
+  function ik(h, f, a, b, bend) {
+    const dx = f[0] - h[0], dy = f[1] - h[1], d0 = Math.hypot(dx, dy), d = clamp(d0, Math.abs(a - b) + 0.01, a + b - 0.01), ang = Math.atan2(dy, dx);
     const c = clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1), k = ang - bend * Math.acos(c);
-    return [h[0] + Math.cos(k) * a, h[1] + Math.sin(k) * a];
+    const mid = [h[0] + Math.cos(k) * a, h[1] + Math.sin(k) * a];
+    const end = [h[0] + Math.cos(ang) * d, h[1] + Math.sin(ang) * d];
+    return [mid, end];
   }
   const rot = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
-  const tr = (pts, o, a, s = 1) => pts.map(p => { const r = rot([p[0] * s, p[1] * s], a); return [o[0] + r[0], o[1] + r[1]]; });
-  return { setBoil, curve, shape, limb, dot, eye, knee, rot, tr, LINE };
+  const add = (p, q) => [p[0] + q[0], p[1] + q[1]];
+  const at = (o, a, p) => add(o, rot(p, a));
+  const tr = (pts, o, a) => pts.map(p => at(o, a, p));
+  const mix = (p, q, u) => [lerp(p[0], q[0], u), lerp(p[1], q[1], u)];
+  return { curve, shape, tube, tubePts, dot, eye, ik, rot, add, at, tr, mix, LINE };
+})();
+
+// ===== 32_phys.js =====
+
+// ---- PHYSICS: springs (for weight, overlap and follow-through), ballistic jumps under real gravity, smooth
+// accelerate-cruise-decelerate travel, and a stepping system that plants feet on the ground and keeps them there.
+const Phys = (() => {
+  const G = 2150;                     // gravity in px/s^2 (a fox kit is about 0.5 m, 1 m is about 220 px)
+  class Spring {
+    constructor(x, f, z) { this.x = x; this.v = 0; this.set(f, z); }
+    set(f, z) { const w = TAU * f; this.k = w * w; this.c = 2 * z * w; return this; }
+    step(target, dt, extra = 0) { const a = this.k * (target - this.x) - this.c * this.v + extra; this.v += a * dt; this.x += this.v * dt; return this.x; }
+  }
+  // a jump from p0 at t0 to p1 at t1 under gravity: [x, y, vy]
+  function ballistic(p0, p1, t0, t1, t) {
+    const T = t1 - t0, tau = clamp(t - t0, 0, T), vy = (p1[1] - p0[1] - 0.5 * G * T * T) / T;
+    return [lerp(p0[0], p1[0], tau / T), p0[1] + vy * tau + 0.5 * G * tau * tau, vy + G * tau];
+  }
+  const apex = T => G * T * T / 8;
+  // travel from x0 to x1 between t0 and t1: speed eases up over `ramp` s, cruises, eases down. Returns [x, v].
+  function cruise(t, t0, t1, x0, x1, ramp) {
+    const T = t1 - t0, a = Math.min(ramp, T / 2), V = (x1 - x0) / (T - a), tau = clamp(t - t0, 0, T);
+    const S = q => q * q * q - q * q * q * q / 2, s = q => q * q * (3 - 2 * q);
+    if (tau <= a) return [x0 + V * a * S(tau / a), V * s(tau / a)];
+    if (tau < T - a) return [x0 + V * (a / 2 + tau - a), V];
+    const q = (T - tau) / a; return [x0 + V * (T - a - a * S(q)), V * s(q)];
+  }
+
+  // ---- feet. Each foot is planted on the ground in world space and stays there while the body passes over it.
+  // When the body has moved far enough that a foot is stretched behind, it lifts, swings forward in an arc and lands
+  // ahead. Trot: diagonal pairs swing together. Walk: one foot at a time, hind-fore-hind-fore. Stopping = settle steps.
+  class Gait {
+    constructor(o) { this.o = o; this.feet = o.feet.map(f => Object.assign({ p: null, sw: null, lift: 0 }, f)); this.events = []; this.seq = 0; this.lastStart = -9; }
+    ideal(f, b) { const x = b.x + b.face * f.home + b.vx * this.o.lead; return [x, hillY(x)]; }
+    plant(b) { for (const f of this.feet) { const x = b.x + b.face * f.home; f.p = [x, hillY(x)]; f.sw = null; f.lift = 0; } }
+    update(t, dt, b) {
+      const o = this.o, moving = Math.abs(b.vx) > 6;
+      for (const f of this.feet) if (f.sw) {      // swinging feet
+        const u = (t - f.sw.t0) / f.sw.dur;
+        if (u < 0.7) f.sw.to = this.ideal(f, b);
+        if (u >= 1) { f.p = [f.sw.to[0], hillY(f.sw.to[0])]; f.sw = null; f.lift = 0; this.events.push({ t, x: f.p[0], y: f.p[1], who: o.who, id: f.id }); continue; }
+        const e = ease.sine(u), x = lerp(f.sw.from[0], f.sw.to[0], e), d = Math.abs(f.sw.to[0] - f.sw.from[0]);
+        f.lift = Math.sin(Math.PI * u);
+        const h = o.lift * clamp(d / o.stride + 0.25, 0.3, 1) * Math.pow(f.lift, 0.85);
+        f.p = [x, Math.min(lerp(f.sw.from[1], f.sw.to[1], e) - h, hillY(x) - 0.5)];
+      }
+      const err = f => Math.abs(this.ideal(f, b)[0] - f.p[0]);
+      const thr = moving ? o.stride * 0.5 : o.settle, start = f => { f.sw = { t0: t, dur: o.dur * (moving ? 1 : 0.8), from: f.p.slice(), to: this.ideal(f, b) }; this.lastStart = t; };
+      if (o.pattern === 'trot') {
+        if (this.feet.some(f => f.sw) || t - this.lastStart < o.dur * 0.6) return;
+        const g = [0, 1].map(k => Math.max(...this.feet.filter(f => f.group === k).map(err)));
+        const k = g[0] >= g[1] ? 0 : 1;
+        if (g[k] > thr) this.feet.filter(f => f.group === k).forEach(start);
+      } else {
+        const sw = this.feet.filter(f => f.sw);
+        if (sw.length >= 2) return;
+        if (sw.length && sw.some(f => (t - f.sw.t0) / f.sw.dur < o.overlap)) return;
+        const free = f => !f.sw && !this.feet.some(q => q.sw && q.side === f.side);
+        if (moving) {                    // walking: strictly hind, fore, hind, fore (a fore foot may lift as its hind foot lands)
+          if (t - this.lastStart > o.dur * 1.5) {     // setting off: begin with whichever foot is most stretched
+            let k = 0; o.order.forEach((fi, j) => { if (err(this.feet[fi]) > err(this.feet[o.order[k]])) k = j; }); this.seq = k; }
+          const f = this.feet[o.order[this.seq]];
+          if (!f.sw && err(f) > thr) { start(f); this.seq = (this.seq + 1) % 4; }
+          else { const over = this.feet.filter(q => !q.sw && err(q) > thr * 1.5).sort((p, q) => err(q) - err(p))[0];   // a foot left far behind catches up
+            if (over) { start(over); this.seq = (o.order.indexOf(this.feet.indexOf(over)) + 1) % 4; } }
+        } else {                         // standing: tidy up whichever feet were left stretched
+          for (let k = 0; k < 4; k++) { const f = this.feet[o.order[(this.seq + k) % 4]];
+            if (free(f) && err(f) > thr) { start(f); this.seq = (this.seq + k + 1) % 4; break; } }
+        }
+      }
+    }
+  }
+  return { G, Spring, ballistic, apex, cruise, Gait };
 })();
 
 // ===== 40_fox.js =====
 
-// ---- THE FOX KIT: a small red fox, drawn side-on facing right, origin on the ground under its middle (y down). ----
-// Pose: walk (cycles), walkAmt, hop (px), tilt (rad, nose up +), sit, stand, flop, crouch (0..1), look (rad, up +),
-// ear (droop 0..1), wag, blink (bool). Returns anchors in local space: mouth (lantern handle), feet.
+// ---- THE FOX KIT: a skeleton (pelvis, chest, neck, head, four three-part legs, a seven-bone tail, two ears) with a skin
+// that rides on it. Local space: facing right, origin on the ground under the middle of the body, y down, unscaled.
+// Poses blend (stand, sit, up = on hind legs, crouch, air); feet come from the stepping system or from the pose; legs
+// reach their feet with two-bone IK, elbows bending back and knees forward like a real fox.
 const Fox = (() => {
-  const C = { fur: '#d9692c', far: '#a84a20', cream: '#f7e8d2', dark: '#3a2620', sh: 'rgba(110,35,30,0.32)', inner: '#5a3024' };
-  const TORSO = [[-14, -2], [-6, -16], [16, -20], [40, -19], [58, -15], [70, -6], [68, 8], [54, 15], [30, 16], [6, 14], [-10, 9]];
-  const CHEST = [[46, 4], [64, -2], [70, 6], [58, 14], [44, 12]];
-  const HEAD = [[0, -6], [2, -22], [14, -30], [26, -26], [34, -16], [44, -9], [47, -5], [42, -1], [28, 2], [12, 4], [0, 2]];
+  const C = { fur: '#d9692c', far: '#ad4f22', cream: '#f7e8d2', dark: '#3a2620', sock: '#45291f', sh: 'rgba(110,35,30,0.3)', inner: '#5a3024' };
+  const POSE = {
+    stand:  { P: [-24, -38], C: [26, -38], bend: 0, fn: [30, 0], ff: [23, 0], hn: [-20, 0], hf: [-27, 0], mt: [-4, -14] },
+    sit:    { P: [-18, -13], C: [17, -40], bend: 0.1, fn: [22, 0], ff: [17, 0], hn: [-3, 0], hf: [-8, 0], mt: [-14, -2] },
+    up:     { P: [-8, -30], C: [2, -73], bend: 0.12, fn: [13, -60], ff: [9, -56], hn: [6, 0], hf: [-1, 0], mt: [-4, -13] },
+    crouch: { P: [-21, -25], C: [23, -26], bend: 0.04, fn: [31, 0], ff: [25, 0], hn: [-18, 0], hf: [-24, 0], mt: [-9, -9] },
+    air:    { P: [-26, -38], C: [28, -39], bend: -0.04, fn: [42, -18], ff: [37, -13], hn: [-42, -14], hf: [-36, -9], mt: [-13, -5] },
+  };
+  const NAMES = ['stand', 'sit', 'up', 'crouch', 'air'];
+  const TORSO = [[-0.3, -2], [-0.18, -12], [0.12, -14.5], [0.45, -13], [0.78, -14.5], [1.02, -13], [1.18, -6], [1.26, 4], [1.16, 12.5], [0.9, 13.5], [0.6, 11.5], [0.32, 12], [0.05, 12.5], [-0.2, 9], [-0.32, 3]];
+  const HEAD = [[0, -6], [2, -20], [12, -28], [24, -26], [33, -17], [43, -10], [47, -6], [42, -1], [28, 2], [12, 4], [1, 2]];
   const CHEEK = [[16, -7], [30, -9], [45, -5], [41, 1], [27, 3], [12, 1]];
-  const { tr, rot, knee, shape, limb, eye, dot } = Ink;
+  const TAIL = { n: 7, len: 7.5, w: [5, 10, 12.5, 13, 12.5, 10.5, 7, 2.5] };
+  const { ik, at, tr, mix, shape, tube, eye, dot, curve } = Ink;
 
-  function rig(P) {
-    const sit = P.sit || 0, stand = P.stand || 0, flop = P.flop || 0, crouch = P.crouch || 0, wa = P.walkAmt || 0;
-    const ph = (P.walk || 0) * TAU;
-    let hy = -44; hy = lerp(hy, -24, sit); hy = lerp(hy, -40, stand); hy = lerp(hy, -19, flop); hy += crouch * 12;
-    hy -= Math.abs(Math.sin(ph)) * 3 * wa;
-    const hx = -30 + 8 * sit + 16 * stand + 4 * flop;
-    const ang = -((P.tilt || 0) + 0.78 * sit + 1.3 * stand) + flop * 0.04;
-    const H = [hx, hy - (P.hop || 0)];
-    const at = p => { const r = rot(p, ang); return [H[0] + r[0], H[1] + r[1]]; };
-    const S = at([52, 4]), Hj = at([2, 4]), N = at([62, -8]);
-    const headAng = ang * (0.55 - 0.3 * stand) - (P.look || 0) + flop * 0.3;
-    const hat = p => { const r = rot(p, headAng); return [N[0] + r[0], N[1] + r[1]]; };
-    // feet: trot, then blend toward the held poses
-    const gy = -(P.hop || 0) * 0.6;
-    const foot = (base, off, lift) => { const u = ph + off * TAU; return [base + Math.sin(u) * 15 * wa, gy - Math.max(0, Math.cos(u)) * lift * wa]; };
-    let fN = foot(S[0] + 4, 0, 9), fF = foot(S[0] + 2, 0.5, 9), hN = foot(Hj[0] - 4, 0.5, 8), hF = foot(Hj[0] - 2, 0, 8);
-    const blend = (f, tgt, k) => [lerp(f[0], tgt[0], k), lerp(f[1], tgt[1], k)];
-    fN = blend(fN, [S[0] + 3, 0], sit); fF = blend(fF, [S[0] - 3, 0], sit); hN = blend(hN, [Hj[0] + 22, 0], sit); hF = blend(hF, [Hj[0] + 16, 0], sit);
-    fN = blend(fN, [S[0] + 18, S[1] + 18], stand); fF = blend(fF, [S[0] + 12, S[1] + 22], stand); hN = blend(hN, [Hj[0] + 8, 0], stand); hF = blend(hF, [Hj[0] - 4, 0], stand);
-    fN = blend(fN, [S[0] + 30, -4], flop); fF = blend(fF, [S[0] + 22, -2], flop); hN = blend(hN, [Hj[0] - 30, -4], flop); hF = blend(hF, [Hj[0] - 24, -2], flop);
-    return { H, ang, S, Hj, N, headAng, at, hat, fN, fF, hN, hF, mouth: hat([40, 1]), headTop: hat([16, -30]) };
+  function weights(w) { const s = clamp(w.s || 0), u = clamp(w.u || 0), c = clamp(w.c || 0), a = clamp(w.a || 0); const st = Math.max(0, 1 - s - u - c - a), tot = st + s + u + c + a || 1; return [st / tot, s / tot, u / tot, c / tot, a / tot]; }
+  const blend = (k, ws) => { let x = 0, y = 0; ws.forEach((w, i) => { const v = POSE[NAMES[i]][k]; x += v[0] * w; y += v[1] * w; }); return [x, y]; };
+  const blend1 = (k, ws) => ws.reduce((a, w, i) => a + POSE[NAMES[i]][k] * w, 0);
+
+  // P: { w:{s,u,c,a}, bob, stretch, pitch, feet:{fn,ff,hn,hf} (local, optional), lift:{...}, look, reach, tilt, ears:[n,f], tail:[angles], blink, hold }
+  function solve(P) {
+    const ws = weights(P.w || {});
+    let Pv = blend('P', ws), Cv = blend('C', ws); const bend = blend1('bend', ws);
+    Pv[1] += P.bob || 0; Cv[1] += P.bob || 0;
+    if (P.stretch && P.stretch !== 1) { const m = mix(Pv, Cv, 0.5); Pv = mix(m, Pv, P.stretch); Cv = mix(m, Cv, P.stretch); }
+    if (P.pitch) { const m = mix(Pv, Cv, 0.35); Pv = at(m, P.pitch, [Pv[0] - m[0], Pv[1] - m[1]]); Cv = at(m, P.pitch, [Cv[0] - m[0], Cv[1] - m[1]]); }
+    if (P.lean) { Pv[1] += P.lean; Cv[1] -= P.lean; }
+    const dir = Math.atan2(Cv[1] - Pv[1], Cv[0] - Pv[0]), len = Math.hypot(Cv[0] - Pv[0], Cv[1] - Pv[1]);
+    const sp = (u, v) => { const b = [Pv[0] + Math.cos(dir) * len * u, Pv[1] + Math.sin(dir) * len * u], a = dir + bend * (u - 0.5); return [b[0] - Math.sin(a) * v, b[1] + Math.cos(a) * v]; };
+    // feet: from the stepping system where given, else from the pose
+    const feet = {};
+    for (const k of ['fn', 'ff', 'hn', 'hf']) { const d = blend(k, ws); feet[k] = P.feet && P.feet[k] ? mix(d, P.feet[k], P.feetW === undefined ? 1 : P.feetW) : d; }
+    if (ws[2] > 0.01 && !(P.feet && P.feet.fn)) { const sh = sp(1, 6); feet.fn = mix(feet.fn, [sh[0] + 13, sh[1] + 16], ws[2]); feet.ff = mix(feet.ff, [sh[0] + 9, sh[1] + 19], ws[2]); }
+    const lift = P.lift || {};
+    const S = sp(1.0, 5), Hp = sp(0.02, 5), mt = blend('mt', ws);
+    const leg = {};
+    for (const k of ['fn', 'ff']) {          // front: shoulder -> elbow (back) -> wrist -> paw
+      const toe = feet[k], curl = clamp((lift[k] || 0) * 1.2 + ws[2] + ws[4] * 0.6);
+      const wrist = [toe[0] - 4 + curl * 3, toe[1] - 4 - curl * 3];
+      const [el, wr] = ik(S, wrist, 16, 17, -1);
+      leg[k] = { top: sp(1.0, -6), j1: S, j2: el, j3: wr, toe: [wr[0] + 4 - curl * 3, wr[1] + 4 - curl * 1.5] };
+    }
+    for (const k of ['hn', 'hf']) {          // hind: hip -> knee (forward) -> hock -> toe
+      const toe = feet[k], curl = clamp((lift[k] || 0) * 1.2 + ws[4] * 0.8);
+      const m = [mt[0] - curl * 6, mt[1] + curl * 5], hock = [toe[0] + m[0], toe[1] + m[1]];
+      const [kn, hk] = ik(Hp, hock, 14, 15, 1);
+      leg[k] = { top: sp(0.02, -7), j1: Hp, j2: kn, j3: hk, toe: [hk[0] - m[0], hk[1] - m[1]] };
+    }
+    // neck and head
+    const look = P.look || 0, reach = P.reach || 0;
+    const NB = sp(1.1, -5), an = dir * 0.4 - 0.95 - look * 0.45 + reach * 1.15, HP = at(NB, an, [20 - reach * 3, 0]);
+    const ah = dir * 0.3 - look + reach * 0.85 + (P.tilt || 0);
+    const hat = p => at(HP, ah, p);
+    // tail chain
+    const TB = sp(-0.3, -5), tail = [TB]; let a = 0;
+    for (let i = 0; i < TAIL.n; i++) { a = P.tail ? P.tail[i] : dir + Math.PI - 0.45 + i * 0.07; const q = tail[i]; tail.push([q[0] + Math.cos(a) * TAIL.len, q[1] + Math.sin(a) * TAIL.len]); }
+    return { ws, Pv, Cv, dir, sp, leg, NB, HP, ah, hat, tail, TB, mouth: hat([41, 2]), headTop: hat([18, -27]) };
+  }
+  // where the tail wants to rest, per pose (relative to the spine)
+  function tailRest(ws, wag) {
+    const base = ws[0] * (Math.PI - 0.45) + ws[1] * (Math.PI - 0.55) + ws[2] * (Math.PI + 0.25) + ws[3] * (Math.PI - 0.3) + ws[4] * (Math.PI - 0.12);
+    const curl = ws[0] * 0.07 + ws[1] * -0.36 + ws[2] * -0.22 + ws[3] * 0.05 + ws[4] * 0.03;
+    return { base: base + wag, curl };
   }
 
-  function tail(ctx, r, P) {
-    const sit = P.sit || 0, base = r.at([-12, -4]);
-    let a = r.ang + Math.PI - 0.3 - 0.7 * sit + Math.sin(P.wag || 0) * 0.22 + (P.flop || 0) * 0.25 - (P.stand || 0) * 0.3;
-    const curl = -0.05 - 0.32 * sit, seg = 8, pts = [base];
-    for (let i = 1; i <= seg; i++) { a += curl + Math.sin((P.wag || 0) - i * 0.5) * 0.04; const p = pts[i - 1]; pts.push([p[0] + Math.cos(a) * 8.5, p[1] + Math.sin(a) * 8.5]); }
-    const L = [], R = [];
-    pts.forEach((p, i) => {
-      const q = pts[Math.min(i + 1, seg)], o = pts[Math.max(i - 1, 0)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, u = i / seg;
-      const w = 4 + 11 * Math.pow(Math.sin(Math.PI * (0.12 + 0.82 * u)), 0.8) * (u > 0.97 ? 0.3 : 1);
-      L.push([p[0] - ty / l * w, p[1] + tx / l * w]); R.unshift([p[0] + ty / l * w, p[1] - tx / l * w]);
-    });
-    shape(ctx, L.concat(R), C.fur, { id: 31, shadow: R.map(p => [p[0], p[1]]).concat(pts.slice().reverse()), shadowCol: C.sh });
-    const k = 6; const tipPts = L.slice(k).concat(R.slice(0, seg + 1 - k));
-    shape(ctx, tipPts, C.cream, { id: 32 });
+  function legShape(ctx, L, front, col, sock) {
+    const w = front ? [12, 6.5, 4.4, 4.8] : [18, 9, 4.6, 4.8];
+    const pts = [L.top, L.j2, L.j3, L.toe];
+    tube(ctx, pts, w, col, { lw: 1.8 });
+    const s0 = mix(L.j2, L.j3, front ? 0.68 : 0.92);
+    tube(ctx, [s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]], sock, { lw: 0 });
+    curve(ctx, Ink.tubePts([s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]]).slice(1, 6), false); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.8; ctx.stroke();
   }
-
-  function draw(ctx, P) {
-    const r = rig(P);
-    // far legs
-    limb(ctx, [r.Hj, knee(r.Hj, r.hF, 20, 22, -1), r.hF], 6.5, C.far, { id: 1, sock: C.dark, sockLen: 0.45 });
-    limb(ctx, [r.S, knee(r.S, r.fF, 18, 20, 1), r.fF], 6.5, C.far, { id: 2, sock: C.dark, sockLen: 0.5 });
-    tail(ctx, r, P);
+  function draw(ctx, P, R) {
+    R = R || solve(P);
+    const sp = R.sp, hat = R.hat;
+    // far legs, behind everything
+    legShape(ctx, R.leg.hf, false, C.far, C.dark); legShape(ctx, R.leg.ff, true, C.far, C.dark);
+    // tail
+    const tw = TAIL.w.map((w, i) => w * (i === 0 ? 1 : 1)), tp = Ink.tubePts(R.tail, tw);
+    shape(ctx, tp, C.fur, { shadow: Ink.tubePts(R.tail.map(p => [p[0], p[1] + 4]), tw.map(w => w * 0.7)), shadowCol: C.sh, lw: 1.9 });
+    const tipStart = R.tail.length - 3;
+    shape(ctx, Ink.tubePts(R.tail.slice(tipStart), tw.slice(tipStart)), C.cream, { lw: 1.6 });
     // body
-    const T = tr(TORSO, r.H, r.ang);
-    shape(ctx, T, C.fur, { id: 3, shadow: tr([[-16, 3], [72, 3], [72, 22], [-16, 22]], r.H, r.ang), shadowCol: C.sh });
-    shape(ctx, tr(CHEST, r.H, r.ang), C.cream, { id: 4, lw: 0 });
-    shape(ctx, tr([[-12, -6], [4, -12], [18, -4], [16, 10], [0, 14], [-12, 8]], r.H, r.ang), C.fur, { id: 5, shadow: tr([[-14, 4], [20, 4], [20, 16], [-14, 16]], r.H, r.ang), shadowCol: C.sh, lw: 1.6 });
-    // near legs
-    limb(ctx, [r.Hj, knee(r.Hj, r.hN, 20, 22, -1), r.hN], 7, C.fur, { id: 6, sock: C.dark, sockLen: 0.45 });
-    limb(ctx, [r.S, knee(r.S, r.fN, 18, 20, 1), r.fN], 7, C.fur, { id: 7, sock: C.dark, sockLen: 0.5 });
-    // ears (behind the head's outline), then head
-    const e = clamp(P.ear || 0), hat = r.hat;
-    const ear = (b0, b1, up, down, col, id) => { const tip = [lerp(up[0], down[0], e), lerp(up[1], down[1], e)];
-      shape(ctx, [hat(b0), hat(tip), hat(b1)], col, { id }); shape(ctx, [hat([lerp(b0[0], b1[0], 0.3), b0[1] - 1]), hat([lerp(tip[0], b0[0], 0.25), lerp(tip[1], b0[1], 0.25)]), hat([lerp(b0[0], b1[0], 0.75), b1[1] - 1])], C.inner, { id: id + 1, lw: 0 }); };
-    ear([5, -23], [16, -28], [3, -50], [-16, -34], C.far, 10);
-    ear([15, -28], [27, -23], [22, -54], [-2, -40], C.fur, 12);
-    shape(ctx, tr(HEAD, r.N, r.headAng), C.fur, { id: 14, shadow: tr([[0, -4], [48, -4], [48, 6], [0, 6]], r.N, r.headAng), shadowCol: C.sh });
-    shape(ctx, tr(CHEEK, r.N, r.headAng), C.cream, { id: 15, lw: 1.4 });
-    const n = hat([46, -6]); dot(ctx, n[0], n[1], 3.3, C.dark);
-    const ey = hat([27, -16]); eye(ctx, ey[0], ey[1], 2.9, P.blink ? 0 : 1);
-    if (P.sad) { const b = hat([22, -21]), c = hat([31, -23]); ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(c[0], c[1] + 2); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.5; ctx.stroke(); }
-    return r;
+    const T = TORSO.map(([u, v]) => sp(u, v));
+    shape(ctx, T, C.fur, { shadow: [[-0.4, 5], [1.35, 5], [1.35, 22], [-0.4, 22]].map(([u, v]) => sp(u, v)), shadowCol: C.sh, lw: 2 });
+    // neck (no seam where it joins the body), chest bib
+    const neck = [sp(0.95, -13.5), hat([2, -21]), hat([-3, -8]), hat([13, 4]), sp(1.27, 5), sp(1.0, 2)];
+    shape(ctx, neck, C.fur, { lw: 0 });
+    ctx.lineCap = 'round'; ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2;
+    curve(ctx, [sp(0.95, -13.5), mix(sp(0.95, -13.5), hat([2, -21]), 0.5), hat([2, -21])], false); ctx.stroke();
+    curve(ctx, [hat([13, 4]), mix(hat([13, 4]), sp(1.27, 5), 0.5), sp(1.27, 5)], false); ctx.stroke();
+    shape(ctx, [hat([24, 3]), hat([9, 4]), sp(1.24, 2), sp(1.12, 11), sp(1.02, 5)], C.cream, { lw: 0 });
+    // near legs over the body: the haunch and the shoulder
+    legShape(ctx, R.leg.hn, false, C.fur, C.dark); legShape(ctx, R.leg.fn, true, C.fur, C.dark);
+    // ears, head, face
+    const ear = (bc, e, col, s) => {
+      const a = R.ah + e, base0 = at(bc, R.ah, [-5.5 * s, 1]), base1 = at(bc, R.ah, [5.5 * s, 1]), tip = at(bc, a, [0, -24]);
+      const m0 = at(bc, a, [-6, -12]), m1 = at(bc, a, [5.5, -12]);
+      shape(ctx, [base0, m0, tip, m1, base1], col, { lw: 1.8 });
+      shape(ctx, [at(bc, a, [-2.5, -3]), at(bc, a, [-3, -12]), at(bc, a, [0, -19]), at(bc, a, [2.5, -11]), at(bc, a, [2, -3])], C.inner, { lw: 0 });
+    };
+    ear(hat([10, -24]), P.ears ? P.ears[1] : -0.15, C.far, 1);
+    shape(ctx, tr(HEAD, R.HP, R.ah), C.fur, { shadow: tr([[0, -3], [50, -3], [50, 8], [0, 8]], R.HP, R.ah), shadowCol: C.sh, lw: 2 });
+    shape(ctx, tr(CHEEK, R.HP, R.ah), C.cream, { lw: 1.3 });
+    ear(hat([21, -25]), P.ears ? P.ears[0] : -0.15, C.fur, 1);
+    const n = hat([46, -6]); dot(ctx, n[0], n[1], 3.2, C.dark);
+    const m0 = hat([36, 0]), m1 = hat([42, 0.5]); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4; ctx.stroke();
+    const ey = hat([27, -15]); eye(ctx, ey[0], ey[1], 2.8, P.blink === undefined ? 1 : P.blink);
+    if (P.sad) { const b = hat([22, -20.5]), c = hat([31, -22.5]); ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4 * P.sad; ctx.stroke(); }
+    return R;
   }
-  return { draw, rig };
+  return { solve, draw, tailRest, TAIL, POSE };
 })();
 
 // ===== 42_deer.js =====
 
-// ---- THE DEER: a gentle roe-ish stag, side-on facing right, origin on the ground under its middle (y down). ----
-// Pose: walk (cycles), walkAmt, neck (-1 head to the ground, 0 normal, 1 raised high), blink, earFlick.
+// ---- THE DEER: a gentle stag with the same kind of skeleton: pelvis, chest, a three-bone neck that curves (it never
+// stretches), head, four legs with real deer joints (elbow back, knee/carpus, hock, fetlock, hoof), ears and tail.
+// Local space: facing right, origin on the ground under the middle, y down, unscaled.
 const Deer = (() => {
-  const C = { fur: '#a8693f', far: '#7d4a2c', cream: '#f0dfc4', dark: '#2e2019', antler: '#e6d2a8', antD: '#c9b083', sh: 'rgba(70,30,40,0.3)', inner: '#6b4030' };
-  const TORSO = [[-104, -262], [-86, -290], [-30, -300], [30, -298], [76, -286], [100, -258], [92, -222], [56, -205], [0, -200], [-56, -206], [-94, -222], [-108, -244]];
-  const HEAD = [[-10, -16], [8, -24], [32, -20], [56, -10], [70, 0], [68, 10], [46, 14], [16, 14], [-6, 10], [-14, -2]];
-  const { tr, rot, knee, shape, limb, eye, dot } = Ink;
-  const NECK = [[-1, [165, -128], 1.25], [-0.4, [168, -210], 0.75], [0, [132, -372], 0.12], [0.5, [116, -452], 0.0], [1, [100, -494], -0.12]];
-  function headAt(n) {
-    for (let i = 1; i < NECK.length; i++) if (n <= NECK[i][0] || i === NECK.length - 1) {
-      const a = NECK[i - 1], b = NECK[i], u = ease.sine(clamp((n - a[0]) / (b[0] - a[0])));
-      return { p: [lerp(a[1][0], b[1][0], u), lerp(a[1][1], b[1][1], u)], a: lerp(a[2], b[2], u) };
-    }
+  const C = { fur: '#a8693f', far: '#80502f', cream: '#f0dfc4', dark: '#2e2019', hoof: '#3a2a22', antler: '#e6d2a8', antD: '#c3a97c', sh: 'rgba(70,30,40,0.28)', inner: '#6b4030' };
+  const TORSO = [[-0.18, -8], [-0.08, -24], [0.2, -27], [0.55, -26], [0.85, -30], [1.02, -28], [1.14, -12], [1.18, 6], [1.08, 24], [0.85, 28], [0.5, 26], [0.2, 27], [-0.02, 22], [-0.15, 10]];
+  const HS = 0.86, HEAD = [[-10, -16], [8, -24], [32, -20], [56, -10], [70, 0], [68, 10], [46, 14], [16, 14], [-6, 10], [-14, -2]].map(p => [p[0] * HS, p[1] * HS]);
+  const SEG = 36;
+  // neck by one number n: -1 head down to the ground, 0 carried, 1 raised high
+  const NK = [[-1, 0.55, 0.5, 0.5, 0.55], [0, -0.95, 0.15, 0.25, 0.12], [1, -1.3, 0.08, 0.15, -0.06]];
+  function neckAt(n) { const i = n < 0 ? 0 : 1, a = NK[i], b = NK[i + 1], u = ease.sine(clamp((n - a[0]) / (b[0] - a[0]))); return [1, 2, 3, 4].map(k => lerp(a[k], b[k], u)); }
+  const { ik, at, tr, mix, shape, tube, eye, dot, curve } = Ink;
+
+  // P: { n, feet:{fn,ff,hn,hf} local, lift, bob, ears:[n,f], tail, blink, nod }
+  function solve(P) {
+    const n = P.n || 0, kneel = Math.max(0, -n) * 22, bob = P.bob || 0;
+    const Pv = [-60, -140 + bob + kneel * 0.25], Cv = [58, -140 + bob + kneel];
+    const dir = Math.atan2(Cv[1] - Pv[1], Cv[0] - Pv[0]), len = Math.hypot(Cv[0] - Pv[0], Cv[1] - Pv[1]);
+    const sp = (u, v) => { const b = [Pv[0] + Math.cos(dir) * len * u, Pv[1] + Math.sin(dir) * len * u]; return [b[0] - Math.sin(dir) * v, b[1] + Math.cos(dir) * v]; };
+    const feet = P.feet || { fn: [62, 0], ff: [54, 0], hn: [-56, 0], hf: [-64, 0] }, lift = P.lift || {};
+    const leg = {};
+    for (const k of ['fn', 'ff']) { const hf = feet[k], cu = lift[k] || 0, carp = [hf[0] + 2 - cu * 10, hf[1] - 48 + cu * 6], S = sp(1.0, 14);
+      const [el, cp] = ik(S, carp, 46, 50, -1); const fet = [cp[0] + (hf[0] - carp[0]) * 0.9 + cu * 6, cp[1] + 40 - cu * 4];
+      leg[k] = { top: sp(1.0, 4), S, el, cp, fet, hoof: [fet[0] + 2 + cu * 4, fet[1] + 8 - cu * 2] }; }
+    for (const k of ['hn', 'hf']) { const hf = feet[k], cu = lift[k] || 0, hock = [hf[0] - 10 - cu * 12, hf[1] - 54 + cu * 8], H = sp(0.0, 10);
+      const [st, hk] = ik(H, hock, 48, 52, 1); const fet = [hk[0] + 9 + cu * 8, hk[1] + 46 - cu * 6];
+      leg[k] = { top: sp(0.03, 0), S: H, el: st, cp: hk, fet, hoof: [fet[0] + 2 + cu * 4, fet[1] + 8 - cu * 2] }; }
+    const [b0, b1, b2, ah0] = neckAt(n + (P.nod || 0));
+    const NB = sp(1.05, -14), j1 = at(NB, b0, [SEG, 0]), j2 = at(j1, b0 + b1, [SEG, 0]), HP = at(j2, b0 + b1 + b2, [SEG, 0]);
+    const ah = ah0 + (P.headTilt || 0);
+    const hat = p => at(HP, ah, [p[0] * HS, p[1] * HS]);
+    return { sp, dir, leg, NB, j1, j2, HP, ah, hat, headTop: hat([22, -22]), antlerTip: hat([5, -116]), tailBase: sp(-0.16, -14),
+      path: [hat([22, -22]), hat([-6, -24]), at(j2, b0 + b1 + b2 - Math.PI / 2, [0, 13]), at(j1, b0 + b1 - Math.PI / 2, [0, 16]), sp(1.0, -30), sp(0.82, -31), sp(0.62, -27)] };
   }
-  function rig(P) {
-    const wa = P.walkAmt || 0, ph = (P.walk || 0) * TAU, bob = -Math.abs(Math.sin(ph * 2)) * 4 * wa;
-    const Y = 92, B = [0, bob + Y], h = headAt(P.neck || 0), Hb = [h.p[0], h.p[1] + bob + Y];
-    const hat = p => { const r = rot(p, h.a); return [Hb[0] + r[0], Hb[1] + r[1]]; };
-    const legs = [[-70, 0, -1], [62, 0.25, 1], [-62, 0.5, -1], [70, 0.75, 1]].map(([x, off, front]) => {
-      const u = ph + off * TAU; return { top: [x, -238 + bob + Y], foot: [x + 6 + Math.sin(u) * 34 * wa, -Math.max(0, Math.cos(u)) * 16 * wa], front };
-    });
-    return { B, Hb, ha: h.a, hat, legs, headTop: hat([24, -24]), back: [-6, -298 + bob + Y], antlerTip: hat([2, -128]) };
+  function legShape(ctx, L, front, col) {
+    const pts = [L.top, L.el, L.cp, L.fet, L.hoof], w = front ? [30, 15, 9, 7, 7.5] : [40, 20, 10, 7, 7.5];
+    tube(ctx, pts, w, col, { lw: 2 });
+    const hv = [[L.fet[0] - 3, L.fet[1] + 1], [L.fet[0] + 4, L.fet[1] + 1], [L.hoof[0] + 6, L.hoof[1] + 1], [L.hoof[0] - 5, L.hoof[1] + 1]];
+    shape(ctx, hv, C.hoof, { lw: 1.4 });
   }
-  function antler(ctx, hat, dx, col, id) {
+  function antler(ctx, hat, dx, col) {
     const o = p => hat([p[0] + dx, p[1]]);
-    const beam = [[12, -20], [6, -60], [-6, -96], [2, -128]].map(o);
-    const tines = [[[6, -60], [30, -84]], [[-6, -96], [18, -114]], [[-4, -90], [-30, -108]], [[8, -40], [-14, -52]]];
-    limb(ctx, beam, 6, col, { id, line: Ink.LINE });
-    tines.forEach((t, i) => limb(ctx, t.map(o), 4.2, col, { id: id + i + 1 }));
+    const beam = [[4, -22], [-6, -50], [-15, -78], [-9, -102], [5, -116]].map(o);
+    tube(ctx, beam, [7, 6, 5, 4, 2.6], col, { lw: 1.6 });
+    for (const t of [[[-3, -38], [10, -50], [18, -52]], [[-12, -64], [0, -80], [6, -88]], [[-14, -86], [-6, -98], [-4, -108]]]) tube(ctx, t.map(o), [4.6, 3.4, 2.2], col, { lw: 1.4 });
   }
-  function draw(ctx, P) {
-    const r = rig(P), hat = r.hat;
-    // far legs
-    [r.legs[2], r.legs[3]].forEach((l, i) => limb(ctx, [l.top, knee(l.top, l.foot, 70, 80, l.front), l.foot], 9, C.far, { id: 40 + i, sock: C.dark, sockLen: 0.12 }));
-    // far antler, far ear behind everything of the head
-    antler(ctx, hat, 10, C.antD, 50);
-    shape(ctx, [hat([8, -18]), hat([-20, -52]), hat([-6, -16])], C.far, { id: 56 });
-    // body + tail
-    shape(ctx, tr([[-102, -270], [-120, -262], [-114, -244], [-100, -250]], r.B, 0), C.cream, { id: 57 });
-    shape(ctx, tr(TORSO, r.B, 0), C.fur, { id: 58, shadow: tr([[-110, -232], [104, -236], [104, -190], [-110, -190]], r.B, 0), shadowCol: C.sh });
-    shape(ctx, tr([[-50, -214], [40, -212], [30, -203], [-40, -204]], r.B, 0), C.cream, { id: 59, lw: 0 });
-    // neck: from the shoulders to the back of the head
-    const n0 = [62, -290 + r.B[1]], n1 = [96, -228 + r.B[1]], h0 = hat([-8, -14]), h1 = hat([12, 12]);
-    const mid = (a, b, k) => [lerp(a[0], b[0], 0.5) + k, lerp(a[1], b[1], 0.5)];
-    const neck = [n0, mid(n0, h0, -6), h0, h1, mid(n1, h1, 8), n1, [80, -262 + r.B[1]]];
-    shape(ctx, neck, C.fur, { id: 60, shadow: [mid(n0, h0, 6), h0, h1, mid(n1, h1, 20), n1], shadowCol: 'rgba(70,30,40,0.16)' });
-    shape(ctx, [mid(n1, h1, 4), h1, hat([20, 12]), mid(n1, h1, 16), [96, -236 + r.B[1]]], C.cream, { id: 61, lw: 0 });
-    // near legs
-    [r.legs[0], r.legs[1]].forEach((l, i) => limb(ctx, [l.top, knee(l.top, l.foot, 70, 80, l.front), l.foot], 10, C.fur, { id: 62 + i, sock: C.dark, sockLen: 0.12 }));
+  function draw(ctx, P, R) {
+    R = R || solve(P); const sp = R.sp, hat = R.hat;
+    legShape(ctx, R.leg.hf, false, C.far); legShape(ctx, R.leg.ff, true, C.far);
+    antler(ctx, hat, -9, C.antD);
+    const earF = P.ears ? P.ears[1] : 0, earN = P.ears ? P.ears[0] : 0;
+    const ear = (b, a, col) => { const q = p => at(hat(b), R.ah + a, p); shape(ctx, [q([-6, 2]), q([-20, -10]), q([-34, -20]), q([-18, -2]), q([0, 6])], col, { lw: 1.6 }); shape(ctx, [q([-6, 1]), q([-24, -12]), q([-17, -3])], C.inner, { lw: 0 }); };
+    ear([2, -18], earF - 0.1, C.far);
+    // tail, then body
+    const tb = R.tailBase, ta = R.dir + Math.PI - 0.9 + (P.tail || 0);
+    shape(ctx, [at(tb, ta, [0, -7]), at(tb, ta, [20, -5]), at(tb, ta, [24, 2]), at(tb, ta, [14, 7]), at(tb, ta, [0, 7])], C.cream, { lw: 1.6 });
+    shape(ctx, TORSO.map(([u, v]) => sp(u, v)), C.fur, { shadow: [[-0.3, 8], [1.3, 8], [1.3, 40], [-0.3, 40]].map(([u, v]) => sp(u, v)), shadowCol: C.sh, lw: 2.2 });
+    shape(ctx, [sp(0.2, 22), sp(0.55, 22), sp(0.85, 24), sp(0.7, 27), sp(0.3, 26)], C.cream, { lw: 0 });
+    shape(ctx, [sp(-0.16, -6), sp(-0.05, -10), sp(0.02, 6), sp(-0.12, 8)], C.cream, { lw: 0 });
+    // neck: filled without a seam, then its two edges inked
+    const NP = [R.NB, R.j1, R.j2, R.HP], NW = [50, 38, 30, 26], np = Ink.tubePts(NP, NW);
+    shape(ctx, np, C.fur, { lw: 0 });
+    shape(ctx, Ink.tubePts(NP.map((p, i) => at(p, R.ah, [4, 0])), NW.map(w => w * 0.42)).map((p, i) => p), 'rgba(0,0,0,0)', { lw: 0 });
+    ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    curve(ctx, np.slice(0, 4), false); ctx.stroke(); curve(ctx, np.slice(5, 9), false); ctx.stroke();
+    // near legs over the body
+    legShape(ctx, R.leg.hn, false, C.fur); legShape(ctx, R.leg.fn, true, C.fur);
     // head
-    shape(ctx, tr(HEAD, r.Hb, r.ha), C.fur, { id: 64, shadow: tr([[-14, 2], [72, 2], [72, 16], [-14, 16]], r.Hb, r.ha), shadowCol: C.sh });
-    shape(ctx, tr([[50, -2], [69, 0], [68, 10], [50, 12]], r.Hb, r.ha), C.cream, { id: 65, lw: 0 });
-    const ns = hat([67, 2]); dot(ctx, ns[0], ns[1], 5, C.dark);
-    const ey = hat([28, -8]); eye(ctx, ey[0], ey[1], 4.2, P.blink ? 0 : 1);
-    const fl = (P.earFlick || 0);
-    shape(ctx, [hat([0, -18]), hat([-34 - 6 * fl, -40 - 10 * fl]), hat([-10, -10])], C.fur, { id: 66 });
-    shape(ctx, [hat([-4, -16]), hat([-26 - 5 * fl, -36 - 8 * fl]), hat([-10, -12])], C.inner, { id: 67, lw: 0 });
-    antler(ctx, hat, 0, C.antler, 70);
-    return r;
+    shape(ctx, tr(HEAD, R.HP, R.ah), C.fur, { shadow: tr([[-14, 3], [70, 3], [70, 16], [-14, 16]], R.HP, R.ah), shadowCol: C.sh, lw: 2 });
+    shape(ctx, [hat([48, -2]), hat([69, 0]), hat([68, 10]), hat([48, 12])], C.cream, { lw: 0 });
+    const ns = hat([67, 2]); dot(ctx, ns[0], ns[1], 4.2, C.dark);
+    const ey = hat([28, -8]); eye(ctx, ey[0], ey[1], 3.8, P.blink === undefined ? 1 : P.blink);
+    ear([-4, -16], earN, C.fur);
+    antler(ctx, hat, 0, C.antler);
+    return R;
   }
-  return { draw, rig };
+  return { solve, draw };
 })();
 
 // ===== 44_friends.js =====
 
 // ---- FRIENDS: a snowshoe hare in its white winter coat, a robin, and the little lantern. ----
 const Hare = (() => {
+  // a snowshoe hare in its white winter coat. Its shapes morph between a round sitting pose and the long stretch of a
+  // hop (same points, blended), so the body squashes and stretches instead of swapping drawings.
   const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a' };
-  const { tr, shape, eye, dot } = Ink;
-  // Pose: emerge (0 under the snow .. 1 out), hop (px), stretch, perk (ears 0 back .. 1 up), blink
+  const { shape, eye, dot, at, mix } = Ink;
+  const K = {
+    body: [[[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], [[-40, -22], [-44, -36], [-28, -52], [6, -54], [32, -50], [46, -38], [38, -24], [0, -18]]],
+    foot: [[[-14, -2], [-12, -12], [18, -10], [30, -4], [26, 2], [-12, 2]], [[-36, -26], [-44, -32], [-66, -20], [-72, -10], [-64, -8], [-42, -16]]],
+    paw: [[[18, -10], [26, -12], [32, -4], [26, 1], [18, 0]], [[40, -32], [52, -30], [60, -20], [54, -16], [44, -22]]],
+    head: [[0, 0], [16, 4]],
+  };
+  const HEAD = [[8, -58], [14, -76], [30, -82], [44, -72], [48, -60], [40, -52], [22, -50]];
+  const M = (k, u) => K[k][0].map((p, i) => mix(p, K[k][1][i], u));
+  // P: emerge (0 under the snow .. 1 out), stretch (0 sit .. 1 mid-hop), crouch, ears [near, far] (radians, 0 up), blink
   function draw(ctx, P) {
-    const em = P.emerge === undefined ? 1 : P.emerge, sink = (1 - em) * 110, hop = P.hop || 0, st = P.stretch || 0;
-    ctx.save(); ctx.beginPath(); ctx.rect(-200, -400, 400, 404); ctx.clip();
-    ctx.translate(0, sink - hop); ctx.scale(1 - st * 0.08, 1 + st * 0.14);
-    const perk = P.perk === undefined ? 1 : P.perk;
-    const ear = (bx, tipUp, tipBack, id) => { const tp = [lerp(tipBack[0], tipUp[0], perk), lerp(tipBack[1], tipUp[1], perk)];
-      const mid = [lerp(bx, tp[0], 0.5), lerp(-76, tp[1], 0.5)], n = [tp[1] - -76, -(tp[0] - bx)], l = Math.hypot(n[0], n[1]) || 1, w = 7;
-      const pts = [[bx - 5, -74], [mid[0] - n[0] / l * w, mid[1] - n[1] / l * w], tp, [mid[0] + n[0] / l * w, mid[1] + n[1] / l * w], [bx + 5, -74]];
-      shape(ctx, pts, C.fur, { id, shadow: [[bx, -74], mid, tp, [mid[0] + n[0] / l * w, mid[1] + n[1] / l * w], [bx + 5, -74]], shadowCol: C.sh });
-      shape(ctx, [[lerp(mid[0], tp[0], 0.55) - 5, lerp(mid[1], tp[1], 0.55)], tp, [lerp(mid[0], tp[0], 0.55) + 5, lerp(mid[1], tp[1], 0.55)]], C.tip, { id: id + 1, lw: 1.2 });
-    };
-    ear(20, [6, -132], [-30, -96], 80);
-    shape(ctx, [[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], C.fur, { id: 82, shadow: [[-40, -18], [34, -14], [34, 6], [-40, 6]], shadowCol: C.sh });
-    shape(ctx, [[-40, -20], [-48, -26], [-46, -14], [-36, -12]], C.fur, { id: 83 });
-    shape(ctx, [[-14, -2], [-12, -12], [18, -10], [30, -4], [26, 2], [-12, 2]], C.fur, { id: 84, shadow: [[-14, -4], [32, -4], [32, 4], [-14, 4]], shadowCol: C.sh });
-    shape(ctx, [[8, -58], [14, -76], [30, -82], [44, -72], [48, -60], [40, -52], [22, -50]], C.fur, { id: 85, shadow: [[6, -58], [50, -58], [50, -48], [6, -48]], shadowCol: C.sh });
-    ear(30, [36, -132], [0, -100], 86);
-    dot(ctx, 47, -62, 2.4, C.nose);
-    eye(ctx, 36, -68, 2.8, P.blink ? 0 : 1);
+    const em = P.emerge === undefined ? 1 : P.emerge, st = clamp(P.stretch || 0), cr = P.crouch || 0;
+    ctx.save(); ctx.beginPath(); ctx.rect(-200, -400, 400, 403); ctx.clip();
+    ctx.translate(0, (1 - em) * 110); ctx.scale(1 + cr * 0.06, 1 - cr * 0.1);
+    const ho = K.head[0].map((v, i) => lerp(v, K.head[1][i], st)), head = HEAD.map(p => [p[0] + ho[0], p[1] + ho[1]]);
+    const ear = (bx, a, id) => { const b = [bx + ho[0], -76 + ho[1]], q = p => at(b, a - st * 0.5, p);
+      shape(ctx, [q([-5, 2]), q([-7, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], C.fur, { shadow: [q([0, 2]), q([1, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], shadowCol: C.sh, lw: 1.6 });
+      shape(ctx, [q([-5, -34]), q([-2, -50]), q([3, -34])], C.tip, { lw: 1.2 }); };
+    ear(20, P.ears ? P.ears[1] - 0.25 : -0.25);
+    shape(ctx, M('body', st), C.fur, { shadow: [[-50, -16], [50, -12], [50, 6], [-50, 6]], shadowCol: C.sh, lw: 1.8 });
+    shape(ctx, [[-36 - st * 8, -22 - st * 10], [-46 - st * 8, -28 - st * 10], [-44 - st * 8, -14 - st * 10], [-34 - st * 8, -12 - st * 10]], C.fur, { lw: 1.6 });
+    shape(ctx, M('foot', st), C.fur, { shadow: M('foot', st).map(p => [p[0], p[1] + 5]), shadowCol: C.sh, lw: 1.6 });
+    shape(ctx, M('paw', st), C.fur, { lw: 1.5 });
+    shape(ctx, head, C.fur, { shadow: head.map(p => [p[0], p[1] + 8]), shadowCol: C.sh, lw: 1.8 });
+    ear(30, P.ears ? P.ears[0] : 0);
+    dot(ctx, 47 + ho[0], -62 + ho[1], 2.4, C.nose);
+    eye(ctx, 36 + ho[0], -68 + ho[1], 2.8, P.blink === undefined ? 1 : P.blink);
     ctx.restore();
   }
   return { draw };
@@ -729,7 +876,7 @@ const Robin = (() => {
     shape(ctx, [[-6, -3], [4, -3], [0, -1]], C.belly, { id: 93, lw: 0 });
     shape(ctx, [[13, -18], [19, -16.5], [13, -15]], C.beak, { id: 94, lw: 0.8 });
     eye(ctx, 8, -18.5, 1.4, 1);
-    const a = fly ? Math.sin(P.flap || 0) * 1.1 - 0.3 : 0.1;
+    const a = P.wing !== undefined ? P.wing : fly ? Math.sin(P.flap || 0) * 1.1 - 0.3 : 0.1;
     ctx.save(); ctx.translate(-3, -14); ctx.rotate(-a);
     shape(ctx, [[0, 0], [-6, -4], [-18, -2], [-14, 4], [-2, 4]], '#6a4a36', { id: 95, lw: 1.3 });
     ctx.restore(); ctx.restore();
@@ -756,141 +903,319 @@ const Lantern = (() => {
 
 // ===== 50_actors.js =====
 
-// ---- ACTORS: the choreography. Who stands where, in what pose, at every moment; and the lights they carry.
-// Bodies are posed "on twos" (a new drawing every 1/12 s, like hand-drawn animation); positions move on every frame.
+// ---- ACTORS: one simulation, stepped 240 times a second from the first frame, moves everyone.
+// Bodies follow their direction with springs (weight and overlap), jumps fly under gravity, feet are planted by the
+// stepping system and never slide or sink, tails/ears/the lantern swing from the motion of what carries them, and
+// contact is real: the fox rides the deer's head, the lantern rests on the snow, the robin perches on what it lands on.
 const Actors = (() => {
-  const two = t => Math.floor(t * 12) / 12;
-  const blinkAt = (t, list) => list.some(b => t >= b && t < b + 0.13);
-  const DEER_FACE = -1, DS = 1.15;
+  const DT = 1 / 240, FS = 1.1, DS = 1.15;
+  const { Spring, ballistic, cruise, Gait } = Phys;
+  const rot = Ink.rot;
+  const toW = (o, g, f, s, p) => { const r = rot([f * p[0] * s, p[1] * s], g); return [o[0] + r[0], o[1] + r[1]]; };
+  const toL = (o, g, f, s, p) => { const r = rot([p[0] - o[0], p[1] - o[1]], -g); return [f * r[0] / s, r[1] / s]; };
+  const slope = x => Math.atan(hillSlope(x));
+  const CFG = { deerX: 2800 };
+  // the timetable (seconds)
+  const T = {
+    walk0: 3.7, walk1: 10.1, fx0: 1500, fx1: 2425,
+    c1: 10.33, j1: 10.55, l1: 10.93, c2: 11.0, j2: 11.18, l2: 11.66, drop: 11.62,
+    rise: 16.85, wl0: 16.95, wl1: 17.42, r0: 17.42, pick: 17.62, r1: 17.86, c3: 17.96, j3: 18.2, l3: 18.7,
+    turn0: 19.4, turn1: 19.62, up0: 19.95, up1: 20.3, hang0: 20.42, hang1: 20.6, down0: 20.85, slide0: 22.6, slide1: 23.5,
+    deer0: 12.9, deer1: 17.35, lower0: 17.45, lower1: 18.1, raise0: 18.98, raise1: 20.0, rest0: 22.6, rest1: 23.6,
+  };
+  const FOX_BLINK = [3.2, 7.4, 10.2, 14.6, 16.4, 19.2, 24.8, 27.9], DEER_BLINK = [16.8, 21.7, 26.4], HARE_BLINK = [17.3, 25.2];
+  const blinkAt = (t, list, base = 1) => { let b = base; for (const x of list) { const d = t - x; if (d > 0 && d < 0.16) b = Math.min(b, Math.abs(d - 0.08) / 0.08); } return b; };
+  const flick = (t, list, w = 0.25) => list.reduce((a, x) => a + (t > x && t < x + w ? Math.sin(Math.PI * (t - x) / w) : 0), 0);
 
-  function deerState(t) {
-    const x = kf([[14.7, 3720], [17.35, 2790, 'out']], t);
-    const P = {
-      walk: (t - 14.7) / (BEAT * 2), walkAmt: smooth(14.6, 14.9, t) * (1 - smooth(17.05, 17.4, t)),
-      neck: kf([[17.4, 0], [18.05, -1], [18.62, -1], [19.9, 1], [22.55, 1], [23.5, 0]], t),
-      blink: blinkAt(t, [16.8, 21.7, 26.4]), earFlick: Math.max(arc(t, 16.1, 16.4, 1), arc(t, 19.0, 19.3, 1), arc(t, 24.4, 24.7, 1)),
+  // ----------------------------------------------------------------------------------------------------- the state
+  let S = null;
+  function fresh() {
+    const sp = (x, f, z) => new Spring(x, f, z);
+    const s = {
+      t: 0, events: [], puffs: [],
+      deer: { gait: new Gait({ who: 'deer', pattern: 'walk', stride: 150, lift: 22, dur: 0.3, lead: 0.25, settle: 5, overlap: 0.18, order: [0, 1, 2, 3],
+        feet: [{ id: 'hn', home: -56 * DS, side: 'n' }, { id: 'fn', home: 62 * DS, side: 'n' }, { id: 'hf', home: -64 * DS, side: 'f' }, { id: 'ff', home: 54 * DS, side: 'f' }] }),
+        n: sp(0, 1.5, 0.85), ears: [sp(0, 3, 0.3), sp(0, 3, 0.3)], tail: sp(0, 5, 0.3), bob: sp(0, 3, 0.7) },
+      fox: { gait: new Gait({ who: 'fox', pattern: 'trot', stride: 60, lift: 10, dur: 0.17, lead: 0.1, settle: 3,
+        feet: [{ id: 'fn', home: 30 * FS, group: 0 }, { id: 'hf', home: -27 * FS, group: 0 }, { id: 'ff', home: 23 * FS, group: 1 }, { id: 'hn', home: -20 * FS, group: 1 }] }),
+        s: sp(0, 5, 0.75), u: sp(0, 4.5, 0.7), c: sp(0, 6, 0.6), a: sp(0, 7, 0.8), fw: sp(1, 9, 1), look: sp(0, 3, 0.6), reach: sp(0, 3.5, 0.8), tilt: sp(0, 3, 0.6),
+        ears: [sp(-0.15, 4, 0.3), sp(-0.15, 4, 0.3)], tail: Array.from({ length: Fox.TAIL.n }, () => ({ x: Math.PI - 0.45, v: 0 })), g: sp(0, 4, 1), face: 1, faceS: 1,
+        root: [T.fx0, hillY(T.fx0)], vel: [0, 0], acc: [0, 0], mode: 'ground', jump: null },
+      hare: { em: sp(0, 2.6, 0.45), st: sp(0, 8, 0.7), cr: sp(0, 7, 0.5), ears: [sp(0, 3.5, 0.25), sp(0, 3.5, 0.25)], x: 2330, y: hillY(2330), vy: 0 },
+      robin: { p: [2160, 760], face: 1, flap: 0 },
+      lan: { mode: 'held', piv: null, pv: [0, 0], th: 0, om: 0, h: [0, 0], v: [0, 0], ang: 0, angv: 0, rest: null },
     };
-    return { x, y: hillY(x), tilt: Math.atan(hillSlope(x)) * 0.8, P };
+    s.fox.gait.plant({ x: T.fx0, vx: 0, face: 1 }); s.deer.gait.plant({ x: 3520, vx: 0, face: -1 });
+    return s;
   }
-  // deer-local point -> world
-  const deerWorld = (d, p) => { const r = Ink.rot([p[0] * DEER_FACE * DS, p[1] * DS], d.tilt); return [d.x + r[0], d.y + r[1]]; };
+  const event = (kind, t, x, y, extra) => S.events.push(Object.assign({ kind, t, x, y }, extra || {}));
 
-  function foxState(t) {
-    const tc = two(t);
-    const P = {
-      walk: (tc - 3.75) / BEAT, walkAmt: smooth(3.6, 3.9, tc) * (1 - smooth(9.8, 10.1, tc)),
-      hop: arc(t, 10.55, 10.95, 34) + arc(t, 11.2, 11.72, 78),
-      stand: Math.max(arc(tc, 11.15, 11.75, 0.55), kf([[19.9, 0], [20.3, 1], [20.8, 1], [21.3, 0.25], [22.5, 0.25], [22.8, 0]], tc)),
-      flop: kf([[11.7, 0], [11.9, 1, 'out'], [12.55, 1], [13.0, 0]], tc),
-      sit: Math.max(kf([[12.55, 0], [13.0, 1], [17.85, 1], [18.05, 0]], tc), kf([[23.0, 0], [23.5, 1]], tc)),
-      crouch: kf([[18.4, 0], [18.55, 0.8], [19.85, 0.8], [20.0, 0]], tc),
-      ear: kf([[12.7, 0], [13.3, 1], [14.1, 1], [14.5, 0.35], [15.1, 0.35], [15.4, 0]], tc),
-      look: kf([[9.9, 0], [10.4, 0.55], [11.7, 0.7], [11.9, -0.2], [13.0, -0.35], [13.9, -0.35], [14.3, -0.55], [15.2, -0.55], [15.6, 0.15], [17.6, 0.15], [18.0, 0.3], [19.9, 0.2], [20.3, 0.75], [21.2, 0.5], [23.5, 0.45]], tc),
-      wag: tc * (tc > 21 ? 6 : 2.2), sad: tc > 12.9 && tc < 14.4,
-      blink: blinkAt(tc, [3.2, 7.4, 13.05, 13.15, 13.25, 13.35, 16.6, 24.8, 27.9]),
+  // ----------------------------------------------------------------------------------------------------- the deer
+  function deerStep(t) {
+    const D = S.deer, [x, vx] = t < T.deer0 ? [3520, 0] : cruise(t, T.deer0, T.deer1, 3520, CFG.deerX, 1.0);
+    const body = { x, vx, face: -1 };
+    const n0 = D.gait.events.length; D.gait.update(t, DT, body);
+    for (let i = n0; i < D.gait.events.length; i++) { const e = D.gait.events[i]; if (t > T.deer0) event('step', t, e.x, e.y, { who: 'deer' }); }
+    const lifts = {}; let lsum = 0; for (const f of D.gait.feet) { lifts[f.id] = f.lift; lsum += f.lift; }
+    const nT = kf([[T.lower0, 0], [T.lower1, -1], [T.raise0, -1], [T.raise1, 1], [T.rest0, 1], [T.rest1, 0]], t);
+    D.n.step(nT, DT); D.bob.step(lsum * 2.2 + Math.sin(t * TAU * 0.35) * 0.8, DT);
+    D.ears[0].step(0.35 * flick(t, [16.1, 19.0, 24.4, 27.0], 0.3) - 0.15 * (lifts.fn || 0), DT); D.ears[1].step(0.3 * flick(t, [16.15, 24.45], 0.3), DT);
+    D.tail.step(0.5 * flick(t, [15.6, 18.0, 21.4, 25.6], 0.22), DT);
+    D.root = [x, hillY(x)]; D.g = slope(x) * 0.65;
+    const feet = {}; for (const f of D.gait.feet) feet[f.id] = toL(D.root, D.g, -1, DS, f.p);
+    D.P = { n: D.n.x, nod: 0.05 * ((lifts.fn || 0) + (lifts.ff || 0)), feet, lift: lifts, bob: D.bob.x, ears: [D.ears[0].x, D.ears[1].x], tail: D.tail.x, blink: blinkAt(t, DEER_BLINK) };
+    D.R = Deer.solve(D.P);
+  }
+  const deerW = p => toW(S.deer.root, S.deer.g, -1, DS, p);
+  const deerHeadAngle = () => -S.deer.R.ah + S.deer.g;     // the slope of the top of its head, in the world
+
+  // ----------------------------------------------------------------------------------------------------- the fox
+  function foxPlan(t) {
+    const F = S.fox;
+    if (t < T.j1) return { mode: 'ground', x: t < T.walk1 ? cruise(t, T.walk0, T.walk1, T.fx0, T.fx1, 1.0) : [T.fx1, 0] };
+    if (t < T.l1) return { mode: 'air', from: [T.fx1, hillY(T.fx1)], to: [2430, hillY(2430)], t0: T.j1, t1: T.l1 };
+    if (t < T.j2) return { mode: 'ground', x: [2430, 0] };
+    if (t < T.l2) return { mode: 'air', from: [2430, hillY(2430)], to: [2416, hillY(2416)], t0: T.j2, t1: T.l2 };
+    if (t < T.wl0) return { mode: 'ground', x: [2416, 0] };
+    if (t < T.j3) { const xl = F.xLantern || 2440; return { mode: 'ground', x: cruise(t, T.wl0, T.wl1, 2416, xl, 0.18) }; }
+    if (t < T.l3) return { mode: 'air', from: [F.xLantern, hillY(F.xLantern)], to: deerW(S.deer.R.headTop), t0: T.j3, t1: T.l3, rideAt: true };
+    if (t < T.slide0) return { mode: 'ride' };
+    if (t < T.slide1) return { mode: 'slide' };
+    return { mode: 'back' };
+  }
+  const pick = (t, list) => { for (const [a, b, v] of list) if (t >= a && t < b) return v; return 0; };
+  function foxTargets(t, mode) {
+    return {
+      c: pick(t, [[T.c1, T.j1, 0.9], [T.c2, T.j2, 1.0], [T.r0 - 0.05, T.r1, 0.4], [T.c3, T.j3, 0.95], [T.l3, T.up0, 0.85]]),
+      a: pick(t, [[T.j1, T.l1 - 0.06, 1], [T.j2, T.l2 - 0.1, 0.3], [T.j3, T.l3 - 0.08, 0.9]]),
+      u: pick(t, [[T.j2 + 0.05, T.l2, 0.8], [T.up0, T.down0, 1]]),
+      s: pick(t, [[T.l2, T.rise, 1], [21.1, 99, 1]]),
+      look: pick(t, [[0, 9.9, 0.05], [9.9, T.l2, 0.85], [T.l2, 12.3, 0.25], [12.3, 13.85, -0.38], [13.85, 15.0, -0.25], [15.0, T.rise, 0.12], [T.rise, T.r0, -0.05], [T.r1, T.j3, 0.35], [T.j3, T.up0, 0.2], [T.up0, T.down0, 0.75], [T.down0, 21.2, 0.3], [21.2, 99, 0.45]]),
+      reach: pick(t, [[T.r0, T.r1 - 0.1, S.reachV || 1]]),
+      tilt: pick(t, [[13.95, 14.9, 0.18], [26.5, 27.4, -0.12]]),
+      ear: pick(t, [[12.4, 13.9, -1.15], [13.9, 15.0, -0.6], [15.0, 15.3, 0.1], [21.3, 99, -0.3]]) || -0.15,
     };
-    let x, y, face = 1, tilt = 0;
-    if (t < 18.1) {
-      x = t < 10 ? Story.foxWalkX(t) : 2440 + 18 * P.flop; y = hillY(x);
-      tilt = -Math.atan(hillSlope(x)) * 0.85 * (1 - P.sit);
+  }
+  function foxStep(t) {
+    const F = S.fox, plan = foxPlan(t), tg = foxTargets(t, plan.mode), prevRoot = F.root.slice(), prevMode = F.mode;
+    // springs toward the targets: weight shifts, overlap, settle
+    F.s.set(t > T.l2 && t < T.l2 + 0.6 ? 6.5 : 4.5, t > T.l2 && t < T.l2 + 0.6 ? 0.42 : 0.75);
+    for (const k of ['c', 'a', 'u', 's', 'look', 'reach', 'tilt']) F[k].step(tg[k], DT);
+    // facing: turns round on the deer's head to face the tree
+    const fT = t < T.turn0 ? 1 : t > T.turn1 ? -1 : Math.cos(Math.PI * ease.inOut((t - T.turn0) / (T.turn1 - T.turn0)));
+    F.faceS = fT; F.face = fT >= 0 ? 1 : -1;
+    let root, g, grounded = false;
+    if (plan.mode === 'ground') {
+      root = [plan.x[0], hillY(plan.x[0])]; grounded = true; F.g.step(slope(root[0]) * 0.9, DT); g = F.g.x;
+      if (prevMode === 'air') { F.c.v += 9; replant(root, g); event('land', t, root[0], root[1], { r: t > T.l2 - 0.1 && t < T.l2 + 0.2 ? 46 : 26 }); }
+      if (Math.abs(t - T.rise) < DT / 2) replant(root, g);
+      if (F.s.x < 0.5) { const n0 = F.gait.events.length; F.gait.update(t, DT, { x: root[0], vx: plan.x[1], face: 1 }); for (let i = n0; i < F.gait.events.length; i++) { const e = F.gait.events[i]; event('step', t, e.x, e.y, { who: 'fox' }); } }
+    } else if (plan.mode === 'air') {
+      const to = plan.rideAt ? deerW(S.deer.R.headTop) : plan.to, b = ballistic(plan.from, to, plan.t0, plan.t1, t);
+      root = [b[0], b[1]]; F.g.step(plan.rideAt ? deerHeadAngle() * clamp((t - plan.t0) / (plan.t1 - plan.t0)) : 0, DT); g = F.g.x;
+    } else if (plan.mode === 'ride') {
+      if (prevMode === 'air') { F.c.v += 7; event('land', t, F.root[0], F.root[1], { r: 0 }); }
+      root = deerW(S.deer.R.headTop); g = deerHeadAngle(); F.g.x = g;
     } else {
-      const d = deerState(t), dr = Deer.rig(d.P), head = deerWorld(d, dr.headTop), back = deerWorld(d, dr.back);
-      if (t < 18.55) { const u = ease.sine((t - 18.1) / 0.45); x = lerp(2440, head[0], u); y = lerp(hillY(2440), head[1], u) - arc(t, 18.1, 18.55, 60); }
-      else if (t < 22.6) { x = head[0]; y = head[1] + 2; }
-      else { const u = ease.inOut(clamp((t - 22.6) / 0.9)); x = lerp(head[0], back[0], u); y = lerp(head[1], back[1], u) - arc(t, 22.6, 23.5, 30) + 4 * u; }
-      face = t < 19.45 ? 1 : -1;
-      tilt = t < 22.6 ? -d.tilt * 0.5 : 0.12;
+      const path = S.deer.R.path.map(deerW), u = plan.mode === 'slide' ? ease.inOut((t - T.slide0) / (T.slide1 - T.slide0)) : 1;
+      const L = []; let tot = 0; for (let i = 1; i < path.length; i++) { const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); L.push(l); tot += l; }
+      let d = u * tot, i = 0; while (i < L.length - 1 && d > L[i]) { d -= L[i]; i++; }
+      const a = path[i], b = path[i + 1], k = clamp(d / L[i]);
+      root = [lerp(a[0], b[0], k), lerp(a[1], b[1], k) + (plan.mode === 'back' ? 0 : 0)];
+      const tang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      F.g.step(plan.mode === 'slide' ? tang : S.deer.g + 0.05, DT); g = F.g.x;
+      if (plan.mode === 'back' && prevMode === 'slide') { F.s.v -= 3; event('land', t, root[0], root[1], { r: 0 }); }
     }
-    P.tilt = tilt;
-    return { x, y, face, P };
+    // motion of the root (for inertia on ears and tail)
+    const vel = [(root[0] - prevRoot[0]) / DT, (root[1] - prevRoot[1]) / DT];
+    F.acc = [clamp((vel[0] - F.vel[0]) / DT, -4000, 4000), clamp((vel[1] - F.vel[1]) / DT, -4000, 4000)]; F.vel = vel;
+    F.root = root; F.gRoot = g; F.mode = plan.mode;
+    // feet: planted by the gait on the ground, from the pose otherwise
+    F.fw.step(grounded && F.s.x < 0.5 ? 1 : 0, DT);
+    const feet = {}, lift = {};
+    for (const f of F.gait.feet) { feet[f.id] = toL(root, g, F.face, FS, f.p); lift[f.id] = f.lift; }
+    const breath = Math.sin(t * TAU * 0.55) * 0.5 + (t > 12.7 && t < 13.5 ? Math.sin((t - 12.7) / 0.8 * Math.PI) * 2.5 : 0);
+    const airPitch = plan.mode === 'air' ? clamp(-F.vel[1] * 0.00035, -0.3, 0.3) * -1 : 0;
+    // tail: a chain of springs, each following the one before it; gravity and the body's acceleration act on it
+    const ws = Fox.solve({ w: { s: F.s.x, u: F.u.x, c: F.c.x, a: F.a.x } }).ws;
+    const wag = (t > 21.3 ? 0.28 * Math.sin(t * 7) : 0.06 * Math.sin(t * 1.6)) + (t > 15.6 && t < 16.4 ? 0.2 * Math.sin(t * 9) : 0);
+    F.P = { w: { s: F.s.x, u: F.u.x, c: F.c.x, a: F.a.x }, feet, feetW: F.fw.x, lift, bob: breath, stretch: 1 + 0.07 * F.a.x, pitch: airPitch,
+      look: F.look.x, reach: F.reach.x, tilt: F.tilt.x, blink: blinkAt(t, FOX_BLINK, t > 12.5 && t < 13.9 ? 0.55 : 1), sad: t > 12.6 && t < 14.0 ? 1 : 0 };
+    const R0 = Fox.solve(F.P), rest = Fox.tailRest(ws, wag), la = rot([F.acc[0] * F.face, F.acc[1]], -g);
+    let prev = R0.dir + rest.base;
+    const pts = [R0.TB];
+    for (let i = 0; i < F.tail.length; i++) {
+      const sg = F.tail[i], tgt = (i === 0 ? R0.dir + rest.base : F.tail[i - 1].x + rest.curl), k = (TAU * (5.5 - i * 0.45)) ** 2, c = 2 * 0.32 * TAU * (5.5 - i * 0.45);
+      const inert = (la[0] * Math.sin(sg.x) - la[1] * Math.cos(sg.x)) * 0.012, grav = Math.cos(sg.x) * 18;
+      sg.v += (k * (tgt - sg.x) - c * sg.v + inert + grav) * DT; sg.x += sg.v * DT;
+      // the tail lies on the ground rather than going through it
+      let q = [pts[i][0] + Math.cos(sg.x) * Fox.TAIL.len, pts[i][1] + Math.sin(sg.x) * Fox.TAIL.len];
+      if (q[1] > -1.5) { const dy = -1.5 - pts[i][1], ang = Math.asin(clamp(dy / Fox.TAIL.len, -1, 1)); sg.x = Math.cos(sg.x) < 0 ? Math.PI - ang : ang; sg.v *= 0.3; q = [pts[i][0] + Math.cos(sg.x) * Fox.TAIL.len, pts[i][1] + Math.sin(sg.x) * Fox.TAIL.len]; }
+      pts.push(q); prev = sg.x;
+    }
+    F.P.tail = F.tail.map(s => s.x);
+    // ears: springs that flop with the head's motion
+    for (const e of F.ears) e.step(tg.ear, DT, la[1] * 0.004);
+    F.P.ears = [F.ears[0].x, F.ears[1].x - 0.05];
+    F.R = Fox.solve(F.P);
+    F.mouth = toW(root, g, F.faceS === 0 ? 1e-3 : F.faceS, FS, F.R.mouth);
   }
-  // where the lantern's handle is, and how it swings
-  function lanternState(t, fox, foxRig) {
-    const S = 1.1, mouth = [fox.x + fox.face * S * foxRig.mouth[0], fox.y + S * foxRig.mouth[1]];
-    let p = mouth, swing = -0.22 * fox.P.walkAmt * Math.sin(fox.P.walk * TAU * 2) + 0.06 * Math.sin(t * 2.3);
-    const ground = hillY(mouth[0]); if (p[1] + 40 > ground) { p = [p[0], ground - 40]; swing += 0.25; }
-    const tip = [TREE.x, TREE.top + 2];
-    if (t >= 20.45) { const u = ease.inOut(clamp((t - 20.45) / 0.18)); p = [lerp(p[0], tip[0], u), lerp(p[1], tip[1], u)]; const s = t - 20.63; swing = s > 0 ? 0.32 * Math.exp(-s * 1.4) * Math.sin(s * 6.5) : swing; }
-    let glow = kf([[0, 1], [11.9, 1], [12.3, 0.42], [14.9, 0.48], [15.7, 1.0], [20.6, 1.05], [20.72, 2.3, 'out'], [21.8, 1.45]], t);
-    if (t > 11.9 && t < 15.7) glow *= 0.82 + 0.18 * vn1(t * 9);
-    return { p, swing, glow };
-  }
-  function hareState(t) {
-    const tc = two(t);
-    let x = 2330; x = lerp(x, 2385, ease.inOut(clamp((t - 15.625) / 0.33))); x = lerp(x, 2452, ease.inOut(clamp((t - 23.4) / 0.35))); x = lerp(x, 2522, ease.inOut(clamp((t - 23.78) / 0.35)));
-    const hop = arc(t, 15.625, 15.955, 30) + arc(t, 23.4, 23.75, 26) + arc(t, 23.78, 24.13, 26);
-    return { x, y: hillY(x), P: { emerge: kf([[15.0, 0], [15.28, 1, 'back']], tc), hop, stretch: hop > 1 ? 0.6 : 0, perk: kf([[15.1, 0.3], [15.5, 1]], tc), blink: blinkAt(tc, [17.3, 25.2]) }, on: t >= 15.0 };
-  }
-  function robinState(t, lan, deerTip) {
-    const perchL = [lan.p[0] + 4, lan.p[1] + 7];
-    let p, fly = 1, face = -1;
-    if (t < 13.75) { const u = clamp((t - 12.6) / 1.15); p = [lerp(2150, perchL[0], ease.out(u)), lerp(720, perchL[1], ease.inOut(u)) - Math.sin(u * Math.PI) * 60]; face = 1; fly = u < 0.98 ? 1 : 0; }
-    else if (t < 18.05) { p = perchL; fly = 0; }
-    else if (t < 21.2) { p = kf([[18.05, perchL], [18.8, [2540, 900]], [19.6, [2720, 720]], [20.4, [2570, 640]], [21.2, [2585, 650]]], t); face = t > 19.6 ? -1 : 1; }
-    else { const u = clamp((t - 21.2) / 2.3); const a = kf([[21.2, [2585, 650]], [22.4, [2700, 600]]], t); p = [lerp(a[0], deerTip[0], ease.inOut(u)), lerp(a[1], deerTip[1], ease.inOut(u)) - Math.sin(u * Math.PI) * 30]; face = 1; fly = u < 1 ? 1 : 0; }
-    return { p, fly, face, flap: t * 42, on: t >= 12.6 };
+  function replant(root, g) {
+    const F = S.fox, R = Fox.solve(F.P || { w: {} });
+    const map = { fn: R.leg.fn.toe, ff: R.leg.ff.toe, hn: R.leg.hn.toe, hf: R.leg.hf.toe };
+    for (const f of F.gait.feet) { const w = toW(root, g, F.face, FS, map[f.id]); f.p = [w[0], hillY(w[0])]; f.sw = null; f.lift = 0; }
   }
 
-  // ---- snow puffs, footprints
-  const PUFFS = [[10.95, 'fox', 12, 30], [11.72, 'fox', 18, 46], [11.9, 'fox', 30, 80], [15.0, 'hare', 26, 70], [18.1, 'fox', 12, 34], [23.75, 'hare', 8, 22], [24.13, 'hare', 8, 22]];
-  function puffs(ctx, t, fox, hare) {
-    for (const [t0, who, n, r] of PUFFS) {
-      const dt = t - t0; if (dt < 0 || dt > 1.1) continue;
-      const cx = who === 'fox' ? (t0 < 18 ? 2440 + (t0 > 11.8 ? 30 : 0) : 2440) : (t0 < 20 ? 2330 : hare.x), cy = hillY(cx);
-      const R = rng(Math.floor(t0 * 100)), k = 1 - Math.exp(-dt * 5), fade = 1 - dt / 1.1;
+  // ----------------------------------------------------------------------------------------------------- the lantern
+  const LL = 22, LH = 37;
+  function lanternStep(t) {
+    const L = S.lan, F = S.fox, tip = [TREE.x, TREE.top + 4];
+    if (L.mode === 'held' && t >= T.drop && t < T.pick) {     // knocked loose by the fall
+      const bob = [L.piv[0] + LL * Math.sin(L.th), L.piv[1] + LL * Math.cos(L.th)];
+      L.mode = 'free'; L.h = L.piv.slice(); L.v = [L.pv[0] * 0.3 + 125, Math.min(0, L.pv[1]) * 0.3 - 300]; L.ang = -L.th; L.angv = 6;
+    }
+    if (L.mode === 'free') {
+      L.v[1] += Phys.G * DT; L.h = [L.h[0] + L.v[0] * DT, L.h[1] + L.v[1] * DT]; L.ang += L.angv * DT;
+      const bottom = [L.h[0] - Math.sin(L.ang) * LH, L.h[1] + Math.cos(L.ang) * LH];
+      if (bottom[1] >= hillY(bottom[0]) + 3) { L.mode = 'ground'; L.angv = L.angv * 0.25 + L.v[0] * 0.004; L.base = [bottom[0], hillY(bottom[0]) + 3]; event('land', t, bottom[0], hillY(bottom[0]), { r: 22 });
+        F.xLantern = L.base[0] - S.mouthReach; }
+    }
+    if (L.mode === 'ground') {            // stands in the snow, wobbles about its base, settles
+      L.angv += (-((TAU * 2.2) ** 2) * L.ang - 2 * 0.22 * TAU * 2.2 * L.angv) * DT; L.ang += L.angv * DT;
+      L.h = [L.base[0] + Math.sin(L.ang) * LH, L.base[1] - Math.cos(L.ang) * LH];
+      if (t >= T.pick) { L.mode = 'held'; L.th = 0; L.om = 0; L.piv = F.mouth.slice(); L.pv = [0, 0]; }
+    }
+    if (L.mode === 'held' || L.mode === 'tip') {
+      let piv = F.mouth;
+      if (t >= T.hang0) { const u = ease.inOut(clamp((t - T.hang0) / (T.hang1 - T.hang0))); piv = [lerp(F.mouth[0], tip[0], u), lerp(F.mouth[1], tip[1], u)]; if (t >= T.hang1) L.mode = 'tip'; }
+      if (!L.piv) L.piv = piv.slice();
+      const v = [(piv[0] - L.piv[0]) / DT, (piv[1] - L.piv[1]) / DT], a = [clamp((v[0] - L.pv[0]) / DT, -3500, 3500), clamp((v[1] - L.pv[1]) / DT, -3500, 3500)];
+      L.om += ((-a[0] * Math.cos(L.th) - (Phys.G - a[1]) * Math.sin(L.th)) / LL - 2.2 * L.om) * DT; L.th += L.om * DT;
+      // a handle held in the teeth (or hooked on a tip) can't swing over the top
+      const lim = L.mode === 'tip' ? 0.9 : 0.75; if (Math.abs(L.th) > lim) { L.th = Math.sign(L.th) * lim; L.om *= -0.25; }
+      // the lantern can't swing into the ground
+      const bottomY = piv[1] + Math.cos(L.th) * (LH + 2); const gy = hillY(piv[0] + Math.sin(L.th) * LH);
+      if (bottomY > gy) { L.th *= 0.9; L.om *= 0.5; }
+      L.piv = piv; L.pv = v; L.h = piv; L.ang = -L.th;
+    }
+    L.glow = kf([[0, 1], [11.6, 1], [12.1, 0.45], [17.5, 0.5], [17.9, 1.0], [20.55, 1.05], [20.68, 2.3, 'out'], [21.8, 1.45]], t) * (t > 11.6 && t < 17.9 ? 0.85 + 0.15 * vn1(t * 9) : 1);
+  }
+
+  // ----------------------------------------------------------------------------------------------------- the hare
+  const HOPS = [[15.6, 15.95, 2330, 2372], [23.4, 23.75, 2372, 2440], [23.82, 24.17, 2440, 2505]];
+  function hareStep(t) {
+    const H = S.hare;
+    H.em.step(t >= 15.0 ? 1 : 0, DT);
+    let x = H.x, y = hillY(x), air = 0, st = 0, crT = 0;
+    for (const [t0, t1, x0, x1] of HOPS) {
+      if (t >= t0 && t < t1) { const b = ballistic([x0, hillY(x0)], [x1, hillY(x1)], t0, t1, t); x = b[0]; y = b[1]; air = 1; st = Math.sin(Math.PI * (t - t0) / (t1 - t0)); }
+      else if (t >= t1) x = x1;
+      if (t >= t0 - 0.14 && t < t0) crT = 1;
+      if (Math.abs(t - t1) < DT / 2) { H.cr.v += 8; event('land', t, x1, hillY(x1), { r: 18 }); }
+    }
+    if (!air) y = hillY(x);
+    const vy = (y - H.y) / DT, ay = (vy - H.vy) / DT; H.vy = vy; H.x = x; H.y = y;
+    H.st.step(st, DT); H.cr.step(crT, DT);
+    H.ears[0].step(t < 15.3 ? -0.6 : 0, DT, -ay * 0.003); H.ears[1].step(t < 15.3 ? -0.6 : -0.05, DT, -ay * 0.003);
+    if (Math.abs(t - 15.0) < DT / 2) event('land', t, 2330, hillY(2330), { r: 40 });
+    H.P = { emerge: H.em.x, stretch: H.st.x, crouch: H.cr.x, ears: [H.ears[0].x, H.ears[1].x], blink: blinkAt(t, HARE_BLINK) };
+  }
+
+  // ----------------------------------------------------------------------------------------------------- the robin
+  function robinStep(t) {
+    const B = S.robin, L = S.lan;
+    const onLantern = [L.h[0] + 1, L.h[1] - 1], branch = [2512, TREE.base - 120], tip = deerW(S.deer.R.antlerTip);
+    const legs = [[12.6, 13.75, [2160, 760], () => onLantern, -120], [17.2, 17.95, () => onLantern, branch, -90], [21.5, 22.4, branch, () => tip, -110]];
+    let p = null, fly = 0, flare = 0;
+    if (t < 12.6) p = [2160, 760]; else if (t < 13.75) p = null; else if (t < 17.2) p = onLantern; else if (t < 17.95) p = null; else if (t < 21.5) p = branch; else if (t < 22.4) p = null; else p = tip;
+    if (!p) {
+      const [t0, t1, a0, b0, h] = legs.find(l => t >= l[0] && t < l[1]), a = typeof a0 === 'function' ? a0() : a0, b = typeof b0 === 'function' ? b0() : b0;
+      const u = (t - t0) / (t1 - t0), e = ease.inOut(u), c = [(a[0] + b[0]) / 2, Math.min(a[1], b[1]) + h];
+      p = [(1 - e) * (1 - e) * a[0] + 2 * (1 - e) * e * c[0] + e * e * b[0], (1 - e) * (1 - e) * a[1] + 2 * (1 - e) * e * c[1] + e * e * b[1]];
+      fly = 1; flare = smooth(0.75, 0.95, u);
+      if (Math.abs(b[0] - a[0]) > 4) B.face = b[0] > a[0] ? 1 : -1;
+    } else if (t > 13.75 && t < 17.2) B.face = -1; else if (t > 22.4) B.face = 1;
+    B.flap += DT * TAU * (fly ? lerp(14, 6, flare) : 0);
+    const v = [(p[0] - B.p[0]) / DT, (p[1] - B.p[1]) / DT]; B.p = p;
+    B.P = { fly, flap: B.flap, wing: fly ? lerp(Math.sin(B.flap) * 1.1 - 0.3, -1.25 + 0.25 * Math.sin(B.flap), flare) : undefined, pitch: fly ? clamp(v[1] * 0.0012, -0.5, 0.5) * B.face - flare * 0.35 * B.face : 0.04 * Math.sin(t * 3) };
+  }
+
+  // ----------------------------------------------------------------------------------------------------- stepping
+  function step(t) { S.t = t; deerStep(t); foxStep(t); lanternStep(t); hareStep(t); robinStep(t); }
+  function reset() {
+    S = fresh(); S.mouthReach = 0;
+    // how far to lower the head so the mouth meets the lantern's handle as it stands in the snow
+    let best = 1, err = 1e9; for (let r = 0.2; r <= 1.2; r += 0.01) { const m = Fox.solve({ w: { c: 0.4 }, reach: r }).mouth; const e = Math.abs(m[1] * FS + LH - 2); if (e < err) { err = e; best = r; } }
+    S.reachV = best; S.mouthReach = Fox.solve({ w: { c: 0.4 }, reach: best }).mouth[0] * FS;
+    deerStep(0); foxStep(0); S.lan.piv = S.fox.mouth.slice(); S.lan.h = S.lan.piv; lanternStep(0); hareStep(0); robinStep(0);
+  }
+  let simT = -1;
+  function advance(t) {
+    if (!S || t < simT - 1e-9) { reset(); simT = 0; }
+    while (simT + DT <= t + 1e-9) { simT += DT; step(simT); }
+    return S;
+  }
+  // run the whole film once: place the deer so the fox can reach the treetop, size the tree to fit, and write the
+  // footsteps into the score so every footfall crunches exactly when a foot lands
+  function precompute() {
+    for (let pass = 0; pass < 2; pass++) {
+      S = null; advance(T.hang0);
+      const m = S.fox.mouth; CFG.deerX += TREE.x - m[0]; TREE.top = Math.round(m[1] - 4);
+    }
+    S = null; advance(FILM - 0.01);
+    const steps = S.events.filter(e => e.kind === 'step'), lands = S.events.filter(e => e.kind === 'land');
+    const seen = []; const steps1 = steps.filter(e => { const dup = seen.some(q => q.who === e.who && Math.abs(q.t - e.t) < 0.03); seen.push(e); return !dup; });
+    Score.add(steps1.map(e => ({ t: e.t, d: 0.08, m: 0, i: 'step', v: e.who === 'deer' ? 0.55 : 0.28, p: clamp((e.x - 2400) / 900, -0.8, 0.8), tag: 'foot' })));
+    Score.add(lands.filter(e => e.r > 20).map(e => ({ t: e.t, d: 0.3, m: 48, i: 'thump', v: e.r > 40 ? 0.5 : 0.22, p: 0, tag: 'landfx' })));
+    const all = S.events.slice(); S = null; simT = -1;
+    return all;
+  }
+  let EV = [];
+
+  // ----------------------------------------------------------------------------------------------------- drawing
+  function prints(ctx, t) {
+    ctx.fillStyle = 'rgba(140,150,200,0.4)';
+    for (const e of EV) { if (e.t > t) break; if (e.kind !== 'step') continue; const r = e.who === 'deer' ? 6.5 : 4;
+      ctx.beginPath(); ctx.ellipse(e.x, e.y + 2, r, r * 0.42, slope(e.x), 0, TAU); ctx.fill(); }
+  }
+  function puffs(ctx, t) {
+    for (const e of EV) {
+      if (e.kind !== 'land' || !e.r) continue; const dt = t - e.t; if (dt < 0 || dt > 1.1) continue;
+      const R = rng(Math.floor(e.t * 1000)), k = 1 - Math.exp(-dt * 5), fade = 1 - dt / 1.1, n = Math.round(e.r * 0.5);
       for (let i = 0; i < n; i++) {
-        const a = -Math.PI * (0.1 + 0.8 * R()), d = r * (0.4 + 0.8 * R()) * k, rr = (4 + 8 * R()) * (1 + dt);
-        ctx.fillStyle = `rgba(246,248,255,${0.75 * fade})`; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d * 1.5, cy + Math.sin(a) * d * 0.7 + dt * dt * 30, rr, 0, TAU); ctx.fill();
+        const a = -Math.PI * (0.05 + 0.9 * R()), d = e.r * (0.3 + 0.8 * R()) * k, rr = (2.5 + 6 * R()) * (1 + dt);
+        ctx.fillStyle = `rgba(246,248,255,${0.7 * fade})`; ctx.beginPath(); ctx.arc(e.x + Math.cos(a) * d * 1.4, e.y + Math.sin(a) * d * 0.6 + dt * dt * 40, rr, 0, TAU); ctx.fill();
       }
     }
   }
-  function prints(ctx, t) {
-    ctx.fillStyle = 'rgba(140,150,200,0.42)';
-    for (const s of Score.tagged('step')) {
-      if (t < s.t) break;
-      const x = Story.foxWalkX(s.t) + (s.k % 2 ? 6 : -10), y = hillY(x) + 3 + (s.k % 2 ? 3 : 0);
-      ctx.beginPath(); ctx.ellipse(x, y, 5, 2.2, Math.atan(hillSlope(x)), 0, TAU); ctx.fill();
-    }
-    for (const s of Score.tagged('deerstep')) {
-      if (t < s.t) break;
-      const x = kf([[14.7, 3720], [17.35, 2790, 'out']], s.t) + (s.k % 2 ? 40 : -50), y = hillY(x) + 4;
-      ctx.beginPath(); ctx.ellipse(x, y, 7, 2.6, Math.atan(hillSlope(x)), 0, TAU); ctx.fill();
-    }
-  }
-
-  // ---- the frame: draws the characters (lit later by the light map) and collects every light source
   function draw(t, cam, A) {
-    const tc = two(t); Ink.setBoil(t);
+    advance(t);
     const z = cam[2], toWorld = ctx => ctx.setTransform(z * ctx._s, 0, 0, z * ctx._s, (W / 2 - cam[0] * z) * ctx._s, (H / 2 - cam[1] * z) * ctx._s);
     const ctx = A.actors; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); toWorld(ctx);
     prints(ctx, t);
-
-    const deer = deerState(t), deerC = deerState(tc); deerC.x = deer.x; deerC.y = deer.y;
-    const deerR = Deer.rig(deerC.P), deerTip = deerWorld(deerC, deerR.antlerTip);
-    const fox = foxState(t), foxR = Fox.rig(fox.P), hare = hareState(t);
-    const lan = lanternState(t, fox, foxR), robin = robinState(t, lan, [deerTip[0], deerTip[1] - 2]);
-    const lanternOnTree = t >= 20.55;
-
-    const place = (x, y, face, s, rotA, fn) => { ctx.save(); toWorld(ctx); ctx.translate(x, y); ctx.rotate(rotA || 0); ctx.scale(face * s, s); fn(); ctx.restore(); };
-    const drawLantern = () => { ctx.save(); toWorld(ctx); ctx.translate(lan.p[0], lan.p[1]); const f = Lantern.draw(ctx, lan.swing, lan.glow); ctx.restore(); return [lan.p[0] + f[0], lan.p[1] + f[1]]; };
+    const place = (p, g, sx, sy, fn) => { ctx.save(); toWorld(ctx); ctx.translate(p[0], p[1]); ctx.rotate(g); ctx.scale(sx, sy); fn(); ctx.restore(); };
+    const L = S.lan, F = S.fox, D = S.deer;
+    const drawLantern = () => { ctx.save(); toWorld(ctx); ctx.translate(L.h[0], L.h[1]); const f = Lantern.draw(ctx, L.ang, L.glow); ctx.restore(); return [L.h[0] + f[0], L.h[1] + f[1]]; };
     let flame;
-    if (lanternOnTree) flame = drawLantern();
-    if (hare.on) place(hare.x, hare.y, 1, 1, 0, () => Hare.draw(ctx, hare.P));
-    if (t >= 14.7) place(deer.x, deer.y, DEER_FACE, DS, deer.tilt, () => Deer.draw(ctx, deerC.P));
-    place(fox.x, fox.y, fox.face, 1.1, 0, () => Fox.draw(ctx, fox.P));
-    if (!lanternOnTree) flame = drawLantern();
-    if (robin.on) place(robin.p[0], robin.p[1], robin.face, 1, 0, () => Robin.draw(ctx, { fly: robin.fly, flap: robin.flap }));
-    toWorld(ctx); puffs(ctx, t, fox, hare);
+    if (L.mode === 'tip') flame = drawLantern();
+    if (t >= 15.0) place([S.hare.x, S.hare.y], slope(S.hare.x) * 0.6, 1, 1, () => Hare.draw(ctx, S.hare.P));
+    if (t >= T.deer0 - 0.2) place(D.root, D.g, -DS, DS, () => Deer.draw(ctx, D.P, D.R));
+    if (L.mode === 'free' || L.mode === 'ground') flame = drawLantern();
+    place(F.root, F.gRoot, F.faceS * FS, FS, () => Fox.draw(ctx, F.P, F.R));
+    if (L.mode === 'held') flame = drawLantern();
+    if (t >= 12.6) place(S.robin.p, S.robin.P.pitch, S.robin.face, 1, () => Robin.draw(ctx, S.robin.P));
+    toWorld(ctx); puffs(ctx, t);
+    if (typeof location !== 'undefined' && location.search.includes('debug')) { ctx.strokeStyle = 'red'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = cam[0] - 1000; x < cam[0] + 1000; x += 4) ctx.lineTo(x, hillY(x)); ctx.stroke(); for (const f of F.gait.feet) { ctx.fillStyle = 'blue'; ctx.fillRect(f.p[0] - 1.5, f.p[1] - 1.5, 3, 3); } }
 
-    // ---- lights
     const tierAge = k => Score.since('tier', k, t);
-    const lights = [{ x: flame[0], y: flame[1], r: 340, c: [1, 0.66, 0.3], k: 0.85 * lan.glow }];
+    const lights = [{ x: flame[0], y: flame[1], r: 340, c: [1, 0.66, 0.3], k: 0.85 * L.glow }];
     let treeGlow = 0;
     for (let k = 0; k < 7; k++) { const a = tierAge(k); if (a === Infinity) continue; const g = clamp(a / 0.2), tr = World.tree.tiers[6 - k];
       treeGlow += g / 7; lights.push({ x: TREE.x, y: (tr.yb + tr.yt) / 2, r: 300, c: [1, 0.72, 0.38], k: 0.32 * g * (1 + 1.4 * Math.exp(-a * 5)) }); }
-    return { flame, lan, lights, treeGlow, tierAge, fox, deer, hare };
+    return { flame, lan: { glow: L.glow }, lights, treeGlow, tierAge };
   }
-  return { draw };
+  function boot() { EV = precompute(); EV.sort((a, b) => a.t - b.t); return EV; }
+  return { draw, boot, advance, T, CFG, get state() { return S; }, FS, DS };
 })();
 
 // ===== 60_glow.js =====
@@ -963,7 +1288,7 @@ const Glow = (() => {
     const s = ctx._s, z = cam[2]; ctx.setTransform(s, 0, 0, s, 0, 0); ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
     const c = [(F.flame[0] - cam[0]) * z + W / 2, (F.flame[1] - cam[1]) * z + H / 2], g = F.lan.glow;
-    const dk = clamp(Story.mood(t) / 2); halo(ctx, c[0], c[1], (50 + 40 * g) * z, [1, 0.7, 0.32], (0.1 + 0.2 * dk) * g);
+    const dk = clamp(Story.mood(t) / 2); halo(ctx, c[0], c[1], (36 + 26 * g) * z, [1, 0.7, 0.32], (0.08 + 0.16 * dk) * g);
     halo(ctx, c[0], c[1], 16 * z, [1, 0.9, 0.6], 0.8 * Math.min(1, g));
     ctx.globalCompositeOperation = 'source-over';
   }
@@ -1085,7 +1410,7 @@ const Stage = (() => {
       fragmentShader: NOISE + REVEAL + /* glsl */`
         uniform sampler2D map, tLight; uniform float uLit, uRev, uOp, uLG; uniform vec3 uAmb; uniform vec2 uRes; varying vec2 vUv;
         void main(){ vec2 s = gl_FragCoord.xy / uRes; vec4 c = texture2D(map, s); if (c.a < 0.003) discard;
-          vec3 col = c.rgb; if (uLit > 0.5) col *= uAmb + texture2D(tLight, s).rgb * uLG;
+          vec3 col = c.rgb; if (uLit > 0.5) col *= uAmb + min(texture2D(tLight, s).rgb * uLG * 0.7, vec3(0.75, 0.6, 0.45));
           gl_FragColor = vec4(col, c.a * reveal(uRev) * uOp); }`,
     });
     return m;
@@ -1351,22 +1676,24 @@ const Sound = (() => {
   const cv = document.getElementById('c'), ld = document.getElementById('ld'), st = document.getElementById('st'), bar = document.querySelector('#bar s'), hud = document.getElementById('hud');
   const mk = s => { const c = document.createElement('canvas'); c.width = W * s; c.height = H * s; const ctx = c.getContext('2d'); ctx._s = s; return ctx; };
   const A = { actors: mk(1), sky: mk(0.5), back: mk(0.5), front: mk(0.5), light: mk(0.25) };
-  function frame(t) {
+  function frame(t, camO) {
     t = clamp(t, 0, FILM - 1e-4);
-    const c = Story.camera(t), F = Actors.draw(t, c, A);
+    const c = camO || Story.camera(t), F = Actors.draw(t, c, A);
     Glow.sky(A.sky, t, c); Glow.back(A.back, t, c, F); Glow.front(A.front, t, c, F); Glow.lightmap(A.light, t, c, F);
     Stage.render(t, c, F, A);
   }
   const tick = () => new Promise(r => setTimeout(r, 0));
   const say = (s, k) => { if (st) st.textContent = s; if (bar) bar.style.width = (k * 100) + '%'; };
   async function boot() {
+    say('rehearsing', 0.05); await tick();
+    Actors.boot();
     if (!RENDER) Sound.prepare();
     say('stretching the paper', 0.1); await tick();
     World.build(); say('mixing the colours', 0.7); await tick();
     Stage.init(cv, A, RENDER); frame(0); say('ready', 1); await tick();
   }
   const ready = boot();
-  if (RENDER) { window.__film = { ready, duration: FILM, frame: t => { frame(t); return cv.toDataURL('image/jpeg', 0.93); } }; return; }
+  if (RENDER) { window.__film = { ready, duration: FILM, frame: (t, camO) => { frame(t, camO); return cv.toDataURL('image/jpeg', 0.93); } }; return; }
 
   // ---- the player
   let playing = false, paused = false, clock = 0, last = 0, usingAudio = false;

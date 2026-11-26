@@ -39,7 +39,7 @@ const Stage = (() => {
       fragmentShader: NOISE + REVEAL + /* glsl */`
         uniform sampler2D map, tLight; uniform float uLit, uRev, uOp, uLG; uniform vec3 uAmb; uniform vec2 uRes; varying vec2 vUv;
         void main(){ vec2 s = gl_FragCoord.xy / uRes; vec4 c = texture2D(map, s); if (c.a < 0.003) discard;
-          vec3 col = c.rgb; if (uLit > 0.5) col *= uAmb + texture2D(tLight, s).rgb * uLG;
+          vec3 col = c.rgb; if (uLit > 0.5) col *= uAmb + min(texture2D(tLight, s).rgb * uLG * 0.7, vec3(0.75, 0.6, 0.45));
           gl_FragColor = vec4(col, c.a * reveal(uRev) * uOp); }`,
     });
     return m;

@@ -112,7 +112,7 @@ const World = (() => {
   }
   const midY = x => (x > 2500 ? 1235 + 70 * Math.sin((x - 2500) / 520) + 20 * vn1(x / 90) : 1560 + 60 * vn1(x / 300));
   function paintMid(ctx, ex) {
-    Paint.wash(ctx, Paint.ridge(midY, ex[0], ex[2], 12, ex[3]), mixC(P.snow, P.snowB, 0.4), { seed: 51, layers: 16, alpha: 0.09, rough: 0.03 });
+    Paint.wash(ctx, Paint.ridge(midY, ex[0], ex[2], 12, ex[3]), mixC(P.snow, P.snowB, 0.8), { seed: 51, layers: 16, alpha: 0.09, rough: 0.03 });
     Paint.wash(ctx, Paint.ridge(x => midY(x) + 50 + 40 * vn1(x / 150), ex[0], ex[2], 16, ex[3]), P.snowB, { seed: 52, layers: 10, alpha: 0.05 });
     const R = rng(53);
     for (let i = 0; i < 26; i++) {        // a fir wood on the far ridge
@@ -136,6 +136,10 @@ const World = (() => {
     // cool hollows and the far side in shade, a warm lip where the last sun catches the crest
     Paint.wash(ctx, Paint.ridge(x => hillY(x) + 150 + 60 * vn1(x / 260), ex[0], ex[2], 18, ex[3]), P.snowB, { seed: 63, layers: 14, alpha: 0.05 });
     Paint.wash(ctx, Paint.ridge(x => hillY(x) + 330 + 90 * vn1(x / 300 + 4), ex[0], ex[2], 20, ex[3]), P.snowS, { seed: 64, layers: 12, alpha: 0.035 });
+    // the near crest: a cool shadow line where the snow turns away, so the ground reads against the snowfields behind
+    const rim = []; for (let x = ex[0]; x <= ex[2]; x += 12) rim.push([x, hillY(x) + 1.5]);
+    Paint.stroke(ctx, rim, 5, hex('#8f97c6'), { seed: 68, bristles: 4, alpha: 0.5 });
+    Paint.stroke(ctx, rim.map(p => [p[0], p[1] + 7]), 14, hex('#c6c9e6'), { seed: 69, bristles: 6, alpha: 0.25 });
     const lip = []; for (let x = 700; x <= 2820; x += 30) lip.push([x, hillY(x) + 5]);
     Paint.stroke(ctx, lip, 9, P.snowW, { seed: 66, bristles: 5, alpha: 0.35 });
     const path = []; for (let x = 820; x <= 2460; x += 24) path.push([x, hillY(x) + 10 + 3 * Math.sin(x / 70)]);
@@ -167,7 +171,7 @@ const World = (() => {
     Paint.dab(ctx, cx + 30, TREE.base + 6, 260, 26, P.snowS, { seed: 70, alpha: 0.05, n: 18 });
     Paint.wash(ctx, [[cx - 12, TREE.base + 4], [cx - 9, TREE.base - 70], [cx + 9, TREE.base - 70], [cx + 12, TREE.base + 4]], P.bark, { seed: 71, layers: 10, alpha: 0.2, depth: 2, rough: 0.04, edge: 0.4 });
     for (let i = 0; i < tiers; i++) {
-      const yb = TREE.base - 46 - i * 69, w = 190 * (1 - i / 7.6), yt = (i === tiers - 1 ? TREE.top : yb - 138);
+      const gap = (TREE.base - 46 - (TREE.top + 92)) / (tiers - 1), yb = TREE.base - 46 - i * gap, w = 160 * (1 - i / 7.6), yt = (i === tiers - 1 ? TREE.top : yb - gap * 2.1);
       const R = rng(500 + i), sc = 4 + (i < 4 ? 1 : 0), tips = [];
       const pts = [[cx, yt]];
       for (let k = 1; k <= 6; k++) { const u = k / 6; pts.push([cx + w * u, yt + (yb - yt) * Math.pow(u, 0.9) + 8 * Math.sin(u * Math.PI)]); }

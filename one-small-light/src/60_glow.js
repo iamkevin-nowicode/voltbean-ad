@@ -67,7 +67,7 @@ const Glow = (() => {
     const s = ctx._s, z = cam[2]; ctx.setTransform(s, 0, 0, s, 0, 0); ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
     const c = [(F.flame[0] - cam[0]) * z + W / 2, (F.flame[1] - cam[1]) * z + H / 2], g = F.lan.glow;
-    const dk = clamp(Story.mood(t) / 2); halo(ctx, c[0], c[1], (50 + 40 * g) * z, [1, 0.7, 0.32], (0.1 + 0.2 * dk) * g);
+    const dk = clamp(Story.mood(t) / 2); halo(ctx, c[0], c[1], (36 + 26 * g) * z, [1, 0.7, 0.32], (0.08 + 0.16 * dk) * g);
     halo(ctx, c[0], c[1], 16 * z, [1, 0.9, 0.6], 0.8 * Math.min(1, g));
     ctx.globalCompositeOperation = 'source-over';
   }
