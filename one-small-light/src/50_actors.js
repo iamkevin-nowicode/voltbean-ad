@@ -267,6 +267,8 @@ const Actors = (() => {
     return all;
   }
   let EV = [];
+  const SCR = [];
+  function scratch(i, w, h) { if (!SCR[i] || SCR[i].canvas.width < w || SCR[i].canvas.height < h) { const c = document.createElement('canvas'); c.width = w; c.height = h; SCR[i] = c.getContext('2d'); } return SCR[i]; }
 
   // ----------------------------------------------------------------------------------------------------- drawing
   function prints(ctx, t) {
@@ -289,17 +291,36 @@ const Actors = (() => {
     const z = cam[2], toWorld = ctx => ctx.setTransform(z * ctx._s, 0, 0, z * ctx._s, (W / 2 - cam[0] * z) * ctx._s, (H / 2 - cam[1] * z) * ctx._s);
     const ctx = A.actors; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); toWorld(ctx);
     prints(ctx, t);
-    const place = (p, g, sx, sy, fn) => { ctx.save(); toWorld(ctx); ctx.translate(p[0], p[1]); ctx.rotate(g); ctx.scale(sx, sy); fn(); ctx.restore(); };
+    const place = (p, g, sx, sy, fn) => { ctx.save(); toWorld(ctx); ctx.translate(p[0], p[1]); ctx.rotate(g); ctx.scale(sx, sy); fn(ctx); ctx.restore(); };
+    // a character drawn as a cel: flat fills first, then ONE line around the outside of the whole silhouette (no lines
+    // where its own parts overlap), then only the few inner lines an animator would draw
+    const cel = (p, g, sx, sy, rad, col, lw, fill, inner) => {
+      toWorld(ctx); const m = ctx.getTransform(), cw = ctx.canvas.width, ch = ctx.canvas.height;
+      const sx0 = m.a * p[0] + m.e, sy0 = m.d * p[1] + m.f, R = rad * m.a;
+      const x0 = Math.max(0, Math.floor(sx0 - R)), y0 = Math.max(0, Math.floor(sy0 - R)), x1 = Math.min(cw, Math.ceil(sx0 + R)), y1 = Math.min(ch, Math.ceil(sy0 + R));
+      if (x1 <= x0 || y1 <= y0) return;
+      const w = x1 - x0, h = y1 - y0, F = scratch(0, cw, ch), L = scratch(1, cw, ch);
+      F.setTransform(1, 0, 0, 1, 0, 0); F.clearRect(0, 0, w, h); F.setTransform(m.a, m.b, m.c, m.d, m.e - x0, m.f - y0);
+      F.save(); F.translate(p[0], p[1]); F.rotate(g); F.scale(sx, sy); Ink.S.fillsOnly = true; fill(F); Ink.S.fillsOnly = false; F.restore();
+      L.setTransform(1, 0, 0, 1, 0, 0); L.clearRect(0, 0, w, h); L.globalCompositeOperation = 'source-over'; L.drawImage(F.canvas, 0, 0, w, h, 0, 0, w, h);
+      L.globalCompositeOperation = 'source-in'; L.fillStyle = col; L.fillRect(0, 0, w, h); L.globalCompositeOperation = 'source-over';
+      const r = Math.max(0.9, lw * m.a);
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; ctx.drawImage(L.canvas, 0, 0, w, h, x0 + Math.cos(a) * r, y0 + Math.sin(a) * r, w, h); }
+      ctx.drawImage(F.canvas, 0, 0, w, h, x0, y0, w, h);
+      ctx.restore();
+      if (inner) place(p, g, sx, sy, inner);
+    };
     const L = S.lan, F = S.fox, D = S.deer;
     const drawLantern = () => { ctx.save(); toWorld(ctx); ctx.translate(L.h[0], L.h[1]); const f = Lantern.draw(ctx, L.ang, L.glow); ctx.restore(); return [L.h[0] + f[0], L.h[1] + f[1]]; };
     let flame;
     if (L.mode === 'tip') flame = drawLantern();
-    if (t >= 15.0) place([S.hare.x, S.hare.y], slope(S.hare.x) * 0.6, 1, 1, () => Hare.draw(ctx, S.hare.P));
-    if (t >= T.deer0 - 0.2) place(D.root, D.g, -DS, DS, () => Deer.draw(ctx, D.P, D.R));
+    if (t >= 15.0) cel([S.hare.x, S.hare.y], slope(S.hare.x) * 0.6, 1, 1, 150, Hare.LINE, 1.6, c => Hare.draw(c, S.hare.P), c => Hare.draw(c, Object.assign({ pass: 'inner' }, S.hare.P)));
+    if (t >= T.deer0 - 0.2) cel(D.root, D.g, -DS, DS, 560, Deer.LINE, 2.0, c => Deer.draw(c, D.P, D.R), c => Deer.inner(c, D.P, D.R));
     if (L.mode === 'free' || L.mode === 'ground') flame = drawLantern();
-    place(F.root, F.gRoot, F.faceS * FS, FS, () => Fox.draw(ctx, F.P, F.R));
+    cel(F.root, F.gRoot, F.faceS * FS, FS, 190, Fox.LINE, 1.7, c => Fox.draw(c, F.P, F.R), c => Fox.inner(c, F.P, F.R));
     if (L.mode === 'held') flame = drawLantern();
-    if (t >= 12.6) place(S.robin.p, S.robin.P.pitch, S.robin.face, 1, () => Robin.draw(ctx, S.robin.P));
+    if (t >= 12.6) cel(S.robin.p, S.robin.P.pitch, S.robin.face, 1, 60, '#3b2a22', 1.3, c => Robin.draw(c, S.robin.P));
     toWorld(ctx); puffs(ctx, t);
     if (typeof location !== 'undefined' && location.search.includes('debug')) { ctx.strokeStyle = 'red'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = cam[0] - 1000; x < cam[0] + 1000; x += 4) ctx.lineTo(x, hillY(x)); ctx.stroke(); for (const f of F.gait.feet) { ctx.fillStyle = 'blue'; ctx.fillRect(f.p[0] - 1.5, f.p[1] - 1.5, 3, 3); } }
 

@@ -35,6 +35,7 @@ The approach follows [The Tea Ride](https://github.com/ChetasLua/the-tea-ride): 
   - **Gravity.** Jumps are real arcs, with a crouch before, a stretch in the air and a squash on landing.
   - **Springs for weight and follow-through.** Poses ease from one to the next with springs, so motion settles naturally. The tail is a chain of springs that drags, swings and lies on the ground. The ears flop with the head's motion. The lantern is a pendulum that swings from whatever holds it.
   - **Contact.** The fox rides the deer's head and slides down its neck. The lantern is knocked loose, tumbles, lands upright in the snow and wobbles to rest. The robin perches on what it lands on.
+- **Cel linework.** Each character is painted as flat colour first. Then a single line is traced around its whole silhouette, so the line appears only where the animal meets the world, never around each limb. Inside, only the few lines an animator would draw (the front of the haunch, the elbow, the jaw) are added, thin and tapered, in a dark tone of the animal's own colour rather than black.
 - **Watercolour lens** (GLSL). This pass adds pigment pooling at the edges of washes, granulation in the paper's grain, slow turbulence in the wash, warm glow, cold-press paper texture, and the deckled border of the sheet.
 - **Light.** A small light map from the lantern and the tree lights the snow and the animals.
 - **One score.** `src/06_score.js` is read by both the synthesiser and the picture:

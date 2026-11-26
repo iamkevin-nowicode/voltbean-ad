@@ -494,7 +494,7 @@ const World = (() => {
 // ---- INK & PAINT: the cel kit. Characters are drawn like animation cels: a smooth inked outline, a flat colour and a
 // flat shadow tone. Shapes are smooth curves through points that ride on a skeleton, so bodies bend instead of breaking.
 const Ink = (() => {
-  const LINE = '#3b2a22';
+  const LINE = '#3b2a22', S = { fillsOnly: false };
   // closed (or open) Catmull-Rom curve through points
   function curve(ctx, q, closed = true) {
     const n = q.length; ctx.beginPath();
@@ -511,7 +511,22 @@ const Ink = (() => {
   function shape(ctx, pts, fill, o = {}) {
     curve(ctx, pts, true); ctx.fillStyle = fill; ctx.fill();
     if (o.shadow) { ctx.save(); curve(ctx, pts, true); ctx.clip(); curve(ctx, o.shadow, true); ctx.fillStyle = o.shadowCol || 'rgba(60,30,40,0.28)'; ctx.fill(); ctx.restore(); }
-    if (o.lw !== 0) { curve(ctx, pts, true); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2; ctx.lineJoin = 'round'; ctx.stroke(); }
+    if (o.lw !== 0 && !S.fillsOnly) { curve(ctx, pts, true); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2; ctx.lineJoin = 'round'; ctx.stroke(); }
+  }
+  // an inner contour line, the kind an animator draws only where one form passes in front of another: thin, tapered
+  // at both ends, in a dark tone of the fur rather than black
+  function line(ctx, pts, w, col, alpha = 0.85) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const n = 6; for (let k = 0; k < n; k++) {           // overlapping strokes, thickest in the middle = a tapered line
+      const a = k / (2 * n), b = 1 - a, q = sub(pts, a, b); ctx.lineWidth = w * (0.35 + 0.65 * k / (n - 1)); ctx.globalAlpha = alpha * (k === 0 ? 1 : 0.55);
+      curve(ctx, q, false); ctx.stroke(); }
+    ctx.restore();
+  }
+  // the part of a polyline between fractions a and b of its length
+  function sub(pts, a, b) {
+    const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const T = L[L.length - 1], at = d => { let i = 1; while (i < pts.length - 1 && L[i] < d) i++; const u = (d - L[i - 1]) / ((L[i] - L[i - 1]) || 1); return mix(pts[i - 1], pts[i], clamp(u)); };
+    const out = [at(a * T)]; for (let i = 1; i < pts.length - 1; i++) if (L[i] > a * T && L[i] < b * T) out.push(pts[i]); out.push(at(b * T)); return out.length < 2 ? [out[0], out[0]] : out;
   }
   // the outline of a tapered tube along a polyline (limbs, necks, tails): widths per point, rounded ends
   function tubePts(pts, wid) {
@@ -544,7 +559,7 @@ const Ink = (() => {
   const at = (o, a, p) => add(o, rot(p, a));
   const tr = (pts, o, a) => pts.map(p => at(o, a, p));
   const mix = (p, q, u) => [lerp(p[0], q[0], u), lerp(p[1], q[1], u)];
-  return { curve, shape, tube, tubePts, dot, eye, ik, rot, add, at, tr, mix, LINE };
+  return { curve, shape, tube, tubePts, dot, eye, ik, rot, add, at, tr, mix, line, LINE, S };
 })();
 
 // ===== 32_phys.js =====
@@ -698,7 +713,6 @@ const Fox = (() => {
     tube(ctx, pts, w, col, { lw: 1.8 });
     const s0 = mix(L.j2, L.j3, front ? 0.68 : 0.92);
     tube(ctx, [s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]], sock, { lw: 0 });
-    curve(ctx, Ink.tubePts([s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]]).slice(1, 6), false); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.8; ctx.stroke();
   }
   function draw(ctx, P, R) {
     R = R || solve(P);
@@ -716,9 +730,6 @@ const Fox = (() => {
     // neck (no seam where it joins the body), chest bib
     const neck = [sp(0.95, -13.5), hat([2, -21]), hat([-3, -8]), hat([13, 4]), sp(1.27, 5), sp(1.0, 2)];
     shape(ctx, neck, C.fur, { lw: 0 });
-    ctx.lineCap = 'round'; ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2;
-    curve(ctx, [sp(0.95, -13.5), mix(sp(0.95, -13.5), hat([2, -21]), 0.5), hat([2, -21])], false); ctx.stroke();
-    curve(ctx, [hat([13, 4]), mix(hat([13, 4]), sp(1.27, 5), 0.5), sp(1.27, 5)], false); ctx.stroke();
     shape(ctx, [hat([24, 3]), hat([9, 4]), sp(1.24, 2), sp(1.12, 11), sp(1.02, 5)], C.cream, { lw: 0 });
     // near legs over the body: the haunch and the shoulder
     legShape(ctx, R.leg.hn, false, C.fur, C.dark); legShape(ctx, R.leg.fn, true, C.fur, C.dark);
@@ -734,12 +745,24 @@ const Fox = (() => {
     shape(ctx, tr(CHEEK, R.HP, R.ah), C.cream, { lw: 1.3 });
     ear(hat([21, -25]), P.ears ? P.ears[0] : -0.15, C.fur, 1);
     const n = hat([46, -6]); dot(ctx, n[0], n[1], 3.2, C.dark);
-    const m0 = hat([36, 0]), m1 = hat([42, 0.5]); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4; ctx.stroke();
     const ey = hat([27, -15]); eye(ctx, ey[0], ey[1], 2.8, P.blink === undefined ? 1 : P.blink);
-    if (P.sad) { const b = hat([22, -20.5]), c = hat([31, -22.5]); ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4 * P.sad; ctx.stroke(); }
     return R;
   }
-  return { solve, draw, tailRest, TAIL, POSE };
+  // which side of a limb segment faces forward (+x) or back
+  const edge = (a, b, w, front) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; let n = [-dy / l, dx / l]; if ((n[0] > 0) !== front) n = [-n[0], -n[1]]; return p => [p[0] + n[0] * w / 2, p[1] + n[1] * w / 2]; };
+  // the few lines an animator draws inside the silhouette
+  function inner(ctx, P, R) {
+    const line = (pts, w, a) => Ink.line(ctx, pts, w, C.line, a), hat = R.hat;
+    const hn = R.leg.hn, e1 = edge(hn.top, hn.j2, 14, true);
+    line([e1(mix(hn.top, hn.j2, 0.25)), e1(mix(hn.top, hn.j2, 0.7)), edge(hn.j2, hn.j3, 9, true)(hn.j2)], 1.5);     // the front of the haunch
+    const fn = R.leg.fn, e2 = edge(fn.top, fn.j2, 9, false);
+    line([e2(mix(fn.top, fn.j2, 0.45)), e2(fn.j2), edge(fn.j2, fn.j3, 6, false)(mix(fn.j2, fn.j3, 0.3))], 1.3);       // the elbow
+    line([hat([2, 1]), hat([13, 4]), hat([27, 2.5]), hat([40, -0.5])], 1.3, 0.7);                                       // the jaw
+    line([hat([35, 0]), hat([42, 0.5])], 1.2);                                                                         // the mouth
+    if (P.sad) line([hat([21, -20]), hat([31, -22.5])], 1.4 * P.sad);
+  }
+  C.line = '#5b2a17';
+  return { solve, draw, inner, tailRest, TAIL, POSE, LINE: C.line };
 })();
 
 // ===== 42_deer.js =====
@@ -807,8 +830,6 @@ const Deer = (() => {
     const NP = [R.NB, R.j1, R.j2, R.HP], NW = [50, 38, 30, 26], np = Ink.tubePts(NP, NW);
     shape(ctx, np, C.fur, { lw: 0 });
     shape(ctx, Ink.tubePts(NP.map((p, i) => at(p, R.ah, [4, 0])), NW.map(w => w * 0.42)).map((p, i) => p), 'rgba(0,0,0,0)', { lw: 0 });
-    ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-    curve(ctx, np.slice(0, 4), false); ctx.stroke(); curve(ctx, np.slice(5, 9), false); ctx.stroke();
     // near legs over the body
     legShape(ctx, R.leg.hn, false, C.fur); legShape(ctx, R.leg.fn, true, C.fur);
     // head
@@ -820,7 +841,18 @@ const Deer = (() => {
     antler(ctx, hat, 0, C.antler);
     return R;
   }
-  return { solve, draw };
+  const edge = (a, b, w, front) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; let n = [-dy / l, dx / l]; if ((n[0] > 0) !== front) n = [-n[0], -n[1]]; return p => [p[0] + n[0] * w / 2, p[1] + n[1] * w / 2]; };
+  function inner(ctx, P, R) {
+    const line = (pts, w, a) => Ink.line(ctx, pts, w, C.line, a), hat = R.hat;
+    const hn = R.leg.hn, e1 = edge(hn.top, hn.el, 30, true);
+    line([e1(mix(hn.top, hn.el, 0.3)), e1(mix(hn.top, hn.el, 0.75)), edge(hn.el, hn.cp, 20, true)(hn.el)], 2);          // the front of the haunch
+    const fn = R.leg.fn, e2 = edge(fn.top, fn.el, 22, false);
+    line([e2(mix(fn.top, fn.el, 0.4)), e2(fn.el), edge(fn.el, fn.cp, 15, false)(mix(fn.el, fn.cp, 0.25))], 1.8);         // the elbow
+    line([hat([-4, 8]), hat([16, 13]), hat([44, 13]), hat([62, 10])], 1.6, 0.7);                                         // the jaw
+    line([hat([54, 8]), hat([64, 8])], 1.3);                                                                             // the mouth
+  }
+  C.line = '#3a2414';
+  return { solve, draw, inner, LINE: C.line };
 })();
 
 // ===== 44_friends.js =====
@@ -829,7 +861,7 @@ const Deer = (() => {
 const Hare = (() => {
   // a snowshoe hare in its white winter coat. Its shapes morph between a round sitting pose and the long stretch of a
   // hop (same points, blended), so the body squashes and stretches instead of swapping drawings.
-  const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a' };
+  const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a', line: '#7d82a3' };
   const { shape, eye, dot, at, mix } = Ink;
   const K = {
     body: [[[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], [[-40, -22], [-44, -36], [-28, -52], [6, -54], [32, -50], [46, -38], [38, -24], [0, -18]]],
@@ -848,6 +880,11 @@ const Hare = (() => {
     const ear = (bx, a, id) => { const b = [bx + ho[0], -76 + ho[1]], q = p => at(b, a - st * 0.5, p);
       shape(ctx, [q([-5, 2]), q([-7, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], C.fur, { shadow: [q([0, 2]), q([1, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], shadowCol: C.sh, lw: 1.6 });
       shape(ctx, [q([-5, -34]), q([-2, -50]), q([3, -34])], C.tip, { lw: 1.2 }); };
+    if (P.pass === 'inner') {            // the hind foot and the front paw against the white body, and the jaw
+      const f = M('foot', st), pw = M('paw', st), L = (pts, w) => Ink.line(ctx, pts, w, C.line, 0.8);
+      L([f[1], f[2], f[3]], 1.4); L([pw[4], pw[0], pw[1]], 1.2); L([head[6], head[5], [head[4][0] - 1, head[4][1] + 2]], 1.2);
+      ctx.restore(); return;
+    }
     ear(20, P.ears ? P.ears[1] - 0.25 : -0.25);
     shape(ctx, M('body', st), C.fur, { shadow: [[-50, -16], [50, -12], [50, 6], [-50, 6]], shadowCol: C.sh, lw: 1.8 });
     shape(ctx, [[-36 - st * 8, -22 - st * 10], [-46 - st * 8, -28 - st * 10], [-44 - st * 8, -14 - st * 10], [-34 - st * 8, -12 - st * 10]], C.fur, { lw: 1.6 });
@@ -859,7 +896,7 @@ const Hare = (() => {
     eye(ctx, 36 + ho[0], -68 + ho[1], 2.8, P.blink === undefined ? 1 : P.blink);
     ctx.restore();
   }
-  return { draw };
+  return { draw, LINE: C.line };
 })();
 
 const Robin = (() => {
@@ -1171,6 +1208,8 @@ const Actors = (() => {
     return all;
   }
   let EV = [];
+  const SCR = [];
+  function scratch(i, w, h) { if (!SCR[i] || SCR[i].canvas.width < w || SCR[i].canvas.height < h) { const c = document.createElement('canvas'); c.width = w; c.height = h; SCR[i] = c.getContext('2d'); } return SCR[i]; }
 
   // ----------------------------------------------------------------------------------------------------- drawing
   function prints(ctx, t) {
@@ -1193,17 +1232,36 @@ const Actors = (() => {
     const z = cam[2], toWorld = ctx => ctx.setTransform(z * ctx._s, 0, 0, z * ctx._s, (W / 2 - cam[0] * z) * ctx._s, (H / 2 - cam[1] * z) * ctx._s);
     const ctx = A.actors; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); toWorld(ctx);
     prints(ctx, t);
-    const place = (p, g, sx, sy, fn) => { ctx.save(); toWorld(ctx); ctx.translate(p[0], p[1]); ctx.rotate(g); ctx.scale(sx, sy); fn(); ctx.restore(); };
+    const place = (p, g, sx, sy, fn) => { ctx.save(); toWorld(ctx); ctx.translate(p[0], p[1]); ctx.rotate(g); ctx.scale(sx, sy); fn(ctx); ctx.restore(); };
+    // a character drawn as a cel: flat fills first, then ONE line around the outside of the whole silhouette (no lines
+    // where its own parts overlap), then only the few inner lines an animator would draw
+    const cel = (p, g, sx, sy, rad, col, lw, fill, inner) => {
+      toWorld(ctx); const m = ctx.getTransform(), cw = ctx.canvas.width, ch = ctx.canvas.height;
+      const sx0 = m.a * p[0] + m.e, sy0 = m.d * p[1] + m.f, R = rad * m.a;
+      const x0 = Math.max(0, Math.floor(sx0 - R)), y0 = Math.max(0, Math.floor(sy0 - R)), x1 = Math.min(cw, Math.ceil(sx0 + R)), y1 = Math.min(ch, Math.ceil(sy0 + R));
+      if (x1 <= x0 || y1 <= y0) return;
+      const w = x1 - x0, h = y1 - y0, F = scratch(0, cw, ch), L = scratch(1, cw, ch);
+      F.setTransform(1, 0, 0, 1, 0, 0); F.clearRect(0, 0, w, h); F.setTransform(m.a, m.b, m.c, m.d, m.e - x0, m.f - y0);
+      F.save(); F.translate(p[0], p[1]); F.rotate(g); F.scale(sx, sy); Ink.S.fillsOnly = true; fill(F); Ink.S.fillsOnly = false; F.restore();
+      L.setTransform(1, 0, 0, 1, 0, 0); L.clearRect(0, 0, w, h); L.globalCompositeOperation = 'source-over'; L.drawImage(F.canvas, 0, 0, w, h, 0, 0, w, h);
+      L.globalCompositeOperation = 'source-in'; L.fillStyle = col; L.fillRect(0, 0, w, h); L.globalCompositeOperation = 'source-over';
+      const r = Math.max(0.9, lw * m.a);
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; ctx.drawImage(L.canvas, 0, 0, w, h, x0 + Math.cos(a) * r, y0 + Math.sin(a) * r, w, h); }
+      ctx.drawImage(F.canvas, 0, 0, w, h, x0, y0, w, h);
+      ctx.restore();
+      if (inner) place(p, g, sx, sy, inner);
+    };
     const L = S.lan, F = S.fox, D = S.deer;
     const drawLantern = () => { ctx.save(); toWorld(ctx); ctx.translate(L.h[0], L.h[1]); const f = Lantern.draw(ctx, L.ang, L.glow); ctx.restore(); return [L.h[0] + f[0], L.h[1] + f[1]]; };
     let flame;
     if (L.mode === 'tip') flame = drawLantern();
-    if (t >= 15.0) place([S.hare.x, S.hare.y], slope(S.hare.x) * 0.6, 1, 1, () => Hare.draw(ctx, S.hare.P));
-    if (t >= T.deer0 - 0.2) place(D.root, D.g, -DS, DS, () => Deer.draw(ctx, D.P, D.R));
+    if (t >= 15.0) cel([S.hare.x, S.hare.y], slope(S.hare.x) * 0.6, 1, 1, 150, Hare.LINE, 1.6, c => Hare.draw(c, S.hare.P), c => Hare.draw(c, Object.assign({ pass: 'inner' }, S.hare.P)));
+    if (t >= T.deer0 - 0.2) cel(D.root, D.g, -DS, DS, 560, Deer.LINE, 2.0, c => Deer.draw(c, D.P, D.R), c => Deer.inner(c, D.P, D.R));
     if (L.mode === 'free' || L.mode === 'ground') flame = drawLantern();
-    place(F.root, F.gRoot, F.faceS * FS, FS, () => Fox.draw(ctx, F.P, F.R));
+    cel(F.root, F.gRoot, F.faceS * FS, FS, 190, Fox.LINE, 1.7, c => Fox.draw(c, F.P, F.R), c => Fox.inner(c, F.P, F.R));
     if (L.mode === 'held') flame = drawLantern();
-    if (t >= 12.6) place(S.robin.p, S.robin.P.pitch, S.robin.face, 1, () => Robin.draw(ctx, S.robin.P));
+    if (t >= 12.6) cel(S.robin.p, S.robin.P.pitch, S.robin.face, 1, 60, '#3b2a22', 1.3, c => Robin.draw(c, S.robin.P));
     toWorld(ctx); puffs(ctx, t);
     if (typeof location !== 'undefined' && location.search.includes('debug')) { ctx.strokeStyle = 'red'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = cam[0] - 1000; x < cam[0] + 1000; x += 4) ctx.lineTo(x, hillY(x)); ctx.stroke(); for (const f of F.gait.feet) { ctx.fillStyle = 'blue'; ctx.fillRect(f.p[0] - 1.5, f.p[1] - 1.5, 3, 3); } }
 

@@ -62,8 +62,6 @@ const Deer = (() => {
     const NP = [R.NB, R.j1, R.j2, R.HP], NW = [50, 38, 30, 26], np = Ink.tubePts(NP, NW);
     shape(ctx, np, C.fur, { lw: 0 });
     shape(ctx, Ink.tubePts(NP.map((p, i) => at(p, R.ah, [4, 0])), NW.map(w => w * 0.42)).map((p, i) => p), 'rgba(0,0,0,0)', { lw: 0 });
-    ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-    curve(ctx, np.slice(0, 4), false); ctx.stroke(); curve(ctx, np.slice(5, 9), false); ctx.stroke();
     // near legs over the body
     legShape(ctx, R.leg.hn, false, C.fur); legShape(ctx, R.leg.fn, true, C.fur);
     // head
@@ -75,5 +73,16 @@ const Deer = (() => {
     antler(ctx, hat, 0, C.antler);
     return R;
   }
-  return { solve, draw };
+  const edge = (a, b, w, front) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; let n = [-dy / l, dx / l]; if ((n[0] > 0) !== front) n = [-n[0], -n[1]]; return p => [p[0] + n[0] * w / 2, p[1] + n[1] * w / 2]; };
+  function inner(ctx, P, R) {
+    const line = (pts, w, a) => Ink.line(ctx, pts, w, C.line, a), hat = R.hat;
+    const hn = R.leg.hn, e1 = edge(hn.top, hn.el, 30, true);
+    line([e1(mix(hn.top, hn.el, 0.3)), e1(mix(hn.top, hn.el, 0.75)), edge(hn.el, hn.cp, 20, true)(hn.el)], 2);          // the front of the haunch
+    const fn = R.leg.fn, e2 = edge(fn.top, fn.el, 22, false);
+    line([e2(mix(fn.top, fn.el, 0.4)), e2(fn.el), edge(fn.el, fn.cp, 15, false)(mix(fn.el, fn.cp, 0.25))], 1.8);         // the elbow
+    line([hat([-4, 8]), hat([16, 13]), hat([44, 13]), hat([62, 10])], 1.6, 0.7);                                         // the jaw
+    line([hat([54, 8]), hat([64, 8])], 1.3);                                                                             // the mouth
+  }
+  C.line = '#3a2414';
+  return { solve, draw, inner, LINE: C.line };
 })();

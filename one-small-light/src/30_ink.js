@@ -2,7 +2,7 @@
 // ---- INK & PAINT: the cel kit. Characters are drawn like animation cels: a smooth inked outline, a flat colour and a
 // flat shadow tone. Shapes are smooth curves through points that ride on a skeleton, so bodies bend instead of breaking.
 const Ink = (() => {
-  const LINE = '#3b2a22';
+  const LINE = '#3b2a22', S = { fillsOnly: false };
   // closed (or open) Catmull-Rom curve through points
   function curve(ctx, q, closed = true) {
     const n = q.length; ctx.beginPath();
@@ -19,7 +19,22 @@ const Ink = (() => {
   function shape(ctx, pts, fill, o = {}) {
     curve(ctx, pts, true); ctx.fillStyle = fill; ctx.fill();
     if (o.shadow) { ctx.save(); curve(ctx, pts, true); ctx.clip(); curve(ctx, o.shadow, true); ctx.fillStyle = o.shadowCol || 'rgba(60,30,40,0.28)'; ctx.fill(); ctx.restore(); }
-    if (o.lw !== 0) { curve(ctx, pts, true); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2; ctx.lineJoin = 'round'; ctx.stroke(); }
+    if (o.lw !== 0 && !S.fillsOnly) { curve(ctx, pts, true); ctx.strokeStyle = o.line || LINE; ctx.lineWidth = o.lw || 2; ctx.lineJoin = 'round'; ctx.stroke(); }
+  }
+  // an inner contour line, the kind an animator draws only where one form passes in front of another: thin, tapered
+  // at both ends, in a dark tone of the fur rather than black
+  function line(ctx, pts, w, col, alpha = 0.85) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const n = 6; for (let k = 0; k < n; k++) {           // overlapping strokes, thickest in the middle = a tapered line
+      const a = k / (2 * n), b = 1 - a, q = sub(pts, a, b); ctx.lineWidth = w * (0.35 + 0.65 * k / (n - 1)); ctx.globalAlpha = alpha * (k === 0 ? 1 : 0.55);
+      curve(ctx, q, false); ctx.stroke(); }
+    ctx.restore();
+  }
+  // the part of a polyline between fractions a and b of its length
+  function sub(pts, a, b) {
+    const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const T = L[L.length - 1], at = d => { let i = 1; while (i < pts.length - 1 && L[i] < d) i++; const u = (d - L[i - 1]) / ((L[i] - L[i - 1]) || 1); return mix(pts[i - 1], pts[i], clamp(u)); };
+    const out = [at(a * T)]; for (let i = 1; i < pts.length - 1; i++) if (L[i] > a * T && L[i] < b * T) out.push(pts[i]); out.push(at(b * T)); return out.length < 2 ? [out[0], out[0]] : out;
   }
   // the outline of a tapered tube along a polyline (limbs, necks, tails): widths per point, rounded ends
   function tubePts(pts, wid) {
@@ -52,5 +67,5 @@ const Ink = (() => {
   const at = (o, a, p) => add(o, rot(p, a));
   const tr = (pts, o, a) => pts.map(p => at(o, a, p));
   const mix = (p, q, u) => [lerp(p[0], q[0], u), lerp(p[1], q[1], u)];
-  return { curve, shape, tube, tubePts, dot, eye, ik, rot, add, at, tr, mix, LINE };
+  return { curve, shape, tube, tubePts, dot, eye, ik, rot, add, at, tr, mix, line, LINE, S };
 })();

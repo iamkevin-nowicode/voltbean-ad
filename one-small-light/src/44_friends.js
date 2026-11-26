@@ -3,7 +3,7 @@
 const Hare = (() => {
   // a snowshoe hare in its white winter coat. Its shapes morph between a round sitting pose and the long stretch of a
   // hop (same points, blended), so the body squashes and stretches instead of swapping drawings.
-  const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a' };
+  const C = { fur: '#f4f1ea', sh: 'rgba(90,100,150,0.28)', tip: '#4a3a33', inner: '#e9b9b0', nose: '#d98a8a', line: '#7d82a3' };
   const { shape, eye, dot, at, mix } = Ink;
   const K = {
     body: [[[-30, -4], [-36, -30], [-22, -54], [4, -60], [24, -50], [32, -26], [26, -4], [0, 2]], [[-40, -22], [-44, -36], [-28, -52], [6, -54], [32, -50], [46, -38], [38, -24], [0, -18]]],
@@ -22,6 +22,11 @@ const Hare = (() => {
     const ear = (bx, a, id) => { const b = [bx + ho[0], -76 + ho[1]], q = p => at(b, a - st * 0.5, p);
       shape(ctx, [q([-5, 2]), q([-7, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], C.fur, { shadow: [q([0, 2]), q([1, -22]), q([-2, -50]), q([5, -22]), q([5, 2])], shadowCol: C.sh, lw: 1.6 });
       shape(ctx, [q([-5, -34]), q([-2, -50]), q([3, -34])], C.tip, { lw: 1.2 }); };
+    if (P.pass === 'inner') {            // the hind foot and the front paw against the white body, and the jaw
+      const f = M('foot', st), pw = M('paw', st), L = (pts, w) => Ink.line(ctx, pts, w, C.line, 0.8);
+      L([f[1], f[2], f[3]], 1.4); L([pw[4], pw[0], pw[1]], 1.2); L([head[6], head[5], [head[4][0] - 1, head[4][1] + 2]], 1.2);
+      ctx.restore(); return;
+    }
     ear(20, P.ears ? P.ears[1] - 0.25 : -0.25);
     shape(ctx, M('body', st), C.fur, { shadow: [[-50, -16], [50, -12], [50, 6], [-50, 6]], shadowCol: C.sh, lw: 1.8 });
     shape(ctx, [[-36 - st * 8, -22 - st * 10], [-46 - st * 8, -28 - st * 10], [-44 - st * 8, -14 - st * 10], [-34 - st * 8, -12 - st * 10]], C.fur, { lw: 1.6 });
@@ -33,7 +38,7 @@ const Hare = (() => {
     eye(ctx, 36 + ho[0], -68 + ho[1], 2.8, P.blink === undefined ? 1 : P.blink);
     ctx.restore();
   }
-  return { draw };
+  return { draw, LINE: C.line };
 })();
 
 const Robin = (() => {

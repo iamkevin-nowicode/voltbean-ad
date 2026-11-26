@@ -75,7 +75,6 @@ const Fox = (() => {
     tube(ctx, pts, w, col, { lw: 1.8 });
     const s0 = mix(L.j2, L.j3, front ? 0.68 : 0.92);
     tube(ctx, [s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]], sock, { lw: 0 });
-    curve(ctx, Ink.tubePts([s0, L.j3, L.toe], [w[1] * 0.62, w[2], w[3]]).slice(1, 6), false); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.8; ctx.stroke();
   }
   function draw(ctx, P, R) {
     R = R || solve(P);
@@ -93,9 +92,6 @@ const Fox = (() => {
     // neck (no seam where it joins the body), chest bib
     const neck = [sp(0.95, -13.5), hat([2, -21]), hat([-3, -8]), hat([13, 4]), sp(1.27, 5), sp(1.0, 2)];
     shape(ctx, neck, C.fur, { lw: 0 });
-    ctx.lineCap = 'round'; ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 2;
-    curve(ctx, [sp(0.95, -13.5), mix(sp(0.95, -13.5), hat([2, -21]), 0.5), hat([2, -21])], false); ctx.stroke();
-    curve(ctx, [hat([13, 4]), mix(hat([13, 4]), sp(1.27, 5), 0.5), sp(1.27, 5)], false); ctx.stroke();
     shape(ctx, [hat([24, 3]), hat([9, 4]), sp(1.24, 2), sp(1.12, 11), sp(1.02, 5)], C.cream, { lw: 0 });
     // near legs over the body: the haunch and the shoulder
     legShape(ctx, R.leg.hn, false, C.fur, C.dark); legShape(ctx, R.leg.fn, true, C.fur, C.dark);
@@ -111,10 +107,22 @@ const Fox = (() => {
     shape(ctx, tr(CHEEK, R.HP, R.ah), C.cream, { lw: 1.3 });
     ear(hat([21, -25]), P.ears ? P.ears[0] : -0.15, C.fur, 1);
     const n = hat([46, -6]); dot(ctx, n[0], n[1], 3.2, C.dark);
-    const m0 = hat([36, 0]), m1 = hat([42, 0.5]); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4; ctx.stroke();
     const ey = hat([27, -15]); eye(ctx, ey[0], ey[1], 2.8, P.blink === undefined ? 1 : P.blink);
-    if (P.sad) { const b = hat([22, -20.5]), c = hat([31, -22.5]); ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.strokeStyle = Ink.LINE; ctx.lineWidth = 1.4 * P.sad; ctx.stroke(); }
     return R;
   }
-  return { solve, draw, tailRest, TAIL, POSE };
+  // which side of a limb segment faces forward (+x) or back
+  const edge = (a, b, w, front) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; let n = [-dy / l, dx / l]; if ((n[0] > 0) !== front) n = [-n[0], -n[1]]; return p => [p[0] + n[0] * w / 2, p[1] + n[1] * w / 2]; };
+  // the few lines an animator draws inside the silhouette
+  function inner(ctx, P, R) {
+    const line = (pts, w, a) => Ink.line(ctx, pts, w, C.line, a), hat = R.hat;
+    const hn = R.leg.hn, e1 = edge(hn.top, hn.j2, 14, true);
+    line([e1(mix(hn.top, hn.j2, 0.25)), e1(mix(hn.top, hn.j2, 0.7)), edge(hn.j2, hn.j3, 9, true)(hn.j2)], 1.5);     // the front of the haunch
+    const fn = R.leg.fn, e2 = edge(fn.top, fn.j2, 9, false);
+    line([e2(mix(fn.top, fn.j2, 0.45)), e2(fn.j2), edge(fn.j2, fn.j3, 6, false)(mix(fn.j2, fn.j3, 0.3))], 1.3);       // the elbow
+    line([hat([2, 1]), hat([13, 4]), hat([27, 2.5]), hat([40, -0.5])], 1.3, 0.7);                                       // the jaw
+    line([hat([35, 0]), hat([42, 0.5])], 1.2);                                                                         // the mouth
+    if (P.sad) line([hat([21, -20]), hat([31, -22.5])], 1.4 * P.sad);
+  }
+  C.line = '#5b2a17';
+  return { solve, draw, inner, tailRest, TAIL, POSE, LINE: C.line };
 })();
