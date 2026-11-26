@@ -75,7 +75,7 @@ const shade = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
 function hillY(x) {
   if (x < 2450) return 1900 - 720 * ease.sine(clamp(x / 2450));
   if (x < 2820) return 1180 + 6 * Math.sin((x - 2450) / 370 * Math.PI);
-  return 1180 + 520 * ease.sine(clamp((x - 2820) / 900));
+  return 1180 + 340 * ease.sine(clamp((x - 2820) / 1150));
 }
 const hillSlope = x => (hillY(x + 2) - hillY(x - 2)) / 4;
 const TREE = { x: 2620, base: 1182, top: 612 };
@@ -958,7 +958,7 @@ const Actors = (() => {
     for (let i = n0; i < D.gait.events.length; i++) { const e = D.gait.events[i]; if (t > T.deer0) event('step', t, e.x, e.y, { who: 'deer' }); }
     const lifts = {}; let lsum = 0; for (const f of D.gait.feet) { lifts[f.id] = f.lift; lsum += f.lift; }
     const nT = kf([[T.lower0, 0], [T.lower1, -1], [T.raise0, -1], [T.raise1, 1], [T.rest0, 1], [T.rest1, 0]], t);
-    D.n.step(nT, DT); D.bob.step(lsum * 2.2 + Math.sin(t * TAU * 0.35) * 0.8, DT);
+    D.n.step(nT - 0.3 * clamp(Math.abs(vx) / 150) * (t < T.lower0 ? 1 : 0), DT);   // head low and forward while it climbs D.bob.step(lsum * 2.2 + Math.sin(t * TAU * 0.35) * 0.8, DT);
     D.ears[0].step(0.35 * flick(t, [16.1, 19.0, 24.4, 27.0], 0.3) - 0.15 * (lifts.fn || 0), DT); D.ears[1].step(0.3 * flick(t, [16.15, 24.45], 0.3), DT);
     D.tail.step(0.5 * flick(t, [15.6, 18.0, 21.4, 25.6], 0.22), DT);
     D.root = [x, hillY(x)]; D.g = slope(x) * 0.65;

@@ -48,7 +48,7 @@ const shade = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
 function hillY(x) {
   if (x < 2450) return 1900 - 720 * ease.sine(clamp(x / 2450));
   if (x < 2820) return 1180 + 6 * Math.sin((x - 2450) / 370 * Math.PI);
-  return 1180 + 520 * ease.sine(clamp((x - 2820) / 900));
+  return 1180 + 340 * ease.sine(clamp((x - 2820) / 1150));
 }
 const hillSlope = x => (hillY(x + 2) - hillY(x - 2)) / 4;
 const TREE = { x: 2620, base: 1182, top: 612 };
