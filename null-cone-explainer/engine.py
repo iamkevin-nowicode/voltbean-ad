@@ -345,7 +345,7 @@ def math_img(s, size=40, col="#FFF4E6", fontset="cm", family="Inter", weight="no
 
 def draw_img(ctx, surf, x, y, scale=1.0, a=1.0, anchor="center"):
     """Images are 2x; scale=1 draws at nominal size."""
-    if a <= 0 or scale <= 0:
+    if a <= 0 or scale <= 0.01:
         return
     w, h = surf.get_width() / 2 * scale, surf.get_height() / 2 * scale
     ox = {"center": -w / 2, "left": 0, "right": -w}[anchor]

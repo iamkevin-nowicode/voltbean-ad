@@ -359,7 +359,7 @@ def s_two(ctx, t):
     if q > 0:
         ctx.save()
         ctx.translate(960, 520)
-        ctx.scale(q, q)
+        ctx.scale(max(q, 0.01), max(q, 0.01))
         ctx.rotate(math.sin(t * 5) * 0.06)
         glow(ctx, 0, 0, 120, PAL["gold"], 0.35)
         ctx.arc(0, 0, 66, 0, TAU)
@@ -603,7 +603,7 @@ def s_walls(ctx, t):
                 qa = 1 - smooth(seg(t, 9.6, 10.4))
                 ctx.save()
                 ctx.translate(1080, yy)
-                ctx.scale(p, p)
+                ctx.scale(max(p, 0.01), max(p, 0.01))
                 if k == 0:
                     gravi(ctx, 28, 0, 0, 56, t, "lav", a=qa, thick=6)
                 elif k == 1:
@@ -628,7 +628,7 @@ def s_walls(ctx, t):
                 if bp > 0:
                     ctx.save()
                     ctx.translate(1180 + k * 210, 600)
-                    ctx.scale(1, bp)
+                    ctx.scale(max(1, 0.01), max(bp, 0.01))
                     gaussian_bump(ctx, 0, 0, 170, 130, t, [PAL["lav"], PAL["gold"], PAL["sky"]][k], 1, k * 1.7)
                     ctx.restore()
             if t > 14.6:
@@ -705,7 +705,7 @@ def s_clock(ctx, t):
     if ba > 0:
         ctx.save()
         ctx.translate(1450, 470)
-        ctx.scale(ba, ba)
+        ctx.scale(max(ba, 0.01), max(ba, 0.01))
         tick(ctx, 0, 0, 130, t, reading, seed=4, mood="open" if t > 11.8 else "smile")
         ctx.restore()
         if t > 8.8:
@@ -785,7 +785,7 @@ def s_glue(ctx, t):
             qx, qy = p1[0] + 150, p0[1] - 30
             ctx.save()
             ctx.translate(qx, qy)
-            ctx.scale(bub, bub)
+            ctx.scale(max(bub, 0.01), max(bub, 0.01))
             rrect(ctx, -110, -40, 220, 80, 40)
             rgba(ctx, "#1A1238", 0.92)
             ctx.fill_preserve()
@@ -803,7 +803,7 @@ def s_glue(ctx, t):
         if cp > 0:
             ctx.save()
             ctx.translate(1560, 840)
-            ctx.scale(cp, cp)
+            ctx.scale(max(cp, 0.01), max(cp, 0.01))
             rrect(ctx, -105, -32, 210, 64, 32)
             rgba(ctx, PAL["mint"], 0.95)
             ctx.fill()
@@ -887,7 +887,7 @@ def s_pair(ctx, t):
             if ia > 0:
                 ctx.save()
                 ctx.translate(hx + 30, hy - 70)
-                ctx.scale(ia, ia)
+                ctx.scale(max(ia, 0.01), max(ia, 0.01))
                 ctx.rotate(math.sin(t * 6) * 0.1)
                 ctx.arc(0, 0, 40, 0, TAU)
                 rgba(ctx, PAL["red"])
@@ -925,7 +925,7 @@ def s_pair(ctx, t):
             if fa > 0:
                 ctx.save()
                 ctx.translate(1400, 728)
-                ctx.scale(fa, fa)
+                ctx.scale(max(fa, 0.01), max(fa, 0.01))
                 rrect(ctx, -150, -34, 300, 68, 34)
                 rgba(ctx, PAL["mint"], 0.95)
                 ctx.fill()
@@ -1019,7 +1019,7 @@ def s_finite(ctx, t):
             ctx.save()
             ctx.translate(jx + 100, jy - 150)
             ctx.rotate(-0.18)
-            ctx.scale(st * 1.0, st * 1.0)
+            ctx.scale(max(st * 1.0, 0.01), max(st * 1.0, 0.01))
             rrect(ctx, -110, -38, 220, 76, 20)
             rgba(ctx, PAL["coral"])
             ctx.fill()
@@ -1136,9 +1136,11 @@ def s_bh(ctx, t):
                 text(ctx, s1, 1245, yy, 24, PAL["cream"])
                 arrow(ctx, 1490, yy, 1610, y + 45, col, 1, 4, 14)
             cp = pop(t, 14.2, 0.6)
+            if cp < 0.01:
+                return
             ctx.save()
             ctx.translate(1700, y + 45)
-            ctx.scale(cp, cp)
+            ctx.scale(max(cp, 0.01), max(cp, 0.01))
             ctx.arc(0, 0, 70, 0, TAU)
             rgba(ctx, PAL["mint"])
             ctx.fill()
@@ -1234,7 +1236,7 @@ def s_recap(ctx, t):
         x = 300 + k * 440
         ctx.save()
         ctx.translate(x, 540)
-        ctx.scale(p, p)
+        ctx.scale(max(p, 0.01), max(p, 0.01))
         card(ctx, 0, 0, 380, 440, 1)
         ctx.arc(-150, -180, 32, 0, TAU)
         rgba(ctx, PAL["gold"])
